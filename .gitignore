@@ -1,0 +1,23 @@
+# IDE and System files
+.idea/
+*.iml
+.DS_Store
+.gradle/
+
+# Secrets (Anchored to root for safety)
+/local.properties
+/keystore.properties
+*.jks
+*.keystore
+
+# Build folders (No slash to catch all modules)
+build/
+app/build/
+.cxx/
+.externalNativeBuild/
+
+# Captured traces
+/captures
+
+# release
+/app/release

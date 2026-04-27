@@ -1,0 +1,116 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace = "io.uglydog.magnifier"
+    compileSdk {
+        version = release(36) {
+            minorApiLevel = 1
+        }
+    }
+
+    packaging {
+        jniLibs {
+            // This ensures native libraries are aligned to 16KB
+            useLegacyPackaging = true 
+        }
+        resources {
+            // Ensures native libs are extracted and aligned during install
+            excludes += "/lib/arm64-v8a/libimage_processing_util_jni.so"
+        }
+    }
+
+    println("DEBUG: Keystore path is: ${keystoreProperties.getProperty("storeFile")}")
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias") ?: "missing_alias"
+            keyPassword = keystoreProperties.getProperty("keyPassword") ?: "missing_password"
+            storePassword = keystoreProperties.getProperty("storePassword") ?: "missing_password"
+            val path = keystoreProperties.getProperty("storeFile")
+            if (path != null) {
+                storeFile = file(path)
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId = "io.uglydog.magnifier"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 100000
+        versionName = "1.0.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        buildConfig = true
+    }
+}
+
+dependencies {
+    implementation(libs.appcompat)
+    implementation(libs.material)
+    implementation(libs.activity)
+    implementation(libs.constraintlayout)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.ext.junit)
+    androidTestImplementation(libs.espresso.core)
+
+    val cameraXVersion = "1.3.0"
+
+    // Core CameraX libraries
+    implementation("androidx.camera:camera-core:$cameraXVersion")
+    implementation("androidx.camera:camera-camera2:$cameraXVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraXVersion")
+    implementation("androidx.camera:camera-view:$cameraXVersion")
+
+    // Night Mode Extension
+    implementation("androidx.camera:camera-extensions:$cameraXVersion")
+
+    // UI Components
+    implementation("androidx.cardview:cardview:1.0.0") // Needed for the image thumbnail
+
+    // Preferences
+    implementation("androidx.preference:preference-ktx:1.2.1")
+
+    // ImageView replacement
+    implementation("com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0")
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "androidx.camera" && requested.name.contains("camera-core")) {
+            // Force a slightly newer version of CameraX if you're on an old one,
+            // as 1.4.0-alpha01+ has better 16KB support.
+            useVersion("1.4.0-beta01")
+        }
+    }
+}

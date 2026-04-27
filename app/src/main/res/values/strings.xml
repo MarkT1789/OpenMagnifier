@@ -1,0 +1,57 @@
+<resources>
+    <string name="app_name">Open Magnifier</string>
+
+    <string name="button_ok">OK</string>
+
+    <string name="entries_enabled">Enabled</string>
+    <string name="entries_disabled">Disabled</string>
+    <string name="entries_low">Low</string>
+    <string name="entries_medium">Medium</string>
+    <string name="entries_high">High</string>
+    <string name="entries_full">Full</string>
+    <string name="entries_grayscale">Grayscale</string>
+    <string name="entries_black_yellow">Black Yellow</string>
+    <string name="entries_inverse">Inverse</string>
+    <string name="entries_inverse_grayscale">Inverse Grayscale</string>
+
+    <string name="settings_title">Display Settings</string>
+    <string name="settings_rotation">Screen Rotation (freeze frame)</string>
+    <string name="settings_zoom">Camera Zoom Level (live view)</string>
+    <string name="settings_dx">Horizontal Scroll Percentage (freeze frame)</string>
+    <string name="settings_dy">Vertical Scroll Percentage (freeze frame)</string>
+    <string name="settings_color">Color Filters</string>
+    <string name="settings_contrast">Contrast Boost</string>
+    <string name="settings_brightness">Brightness Boost</string>
+
+    <string name="toast_brightness">Brightness %1$s</string>
+    <string name="toast_brightness_disabled">Can\'t change brightness in live view</string>
+
+    <string name="toast_contrast">Contrast %1$s</string>
+    <string name="toast_contrast_disabled">Can\'t change contrast in live view</string>
+
+    <string name="toast_color">Color filter %1$s</string>
+    <string name="toast_color_disabled">Can\'t change color filter in live view</string>
+
+    <string name="toast_rotation">Rotation %1$d°</string>
+    <string name="toast_rotation_disabled">Can\'t rotate live view</string>
+
+    <string name="toast_scroll_horizontal">Horizontal scroll %d%%</string>
+    <string name="toast_scroll_horizontal_disabled">Can\'t change horizontal scroll in live view</string>
+
+    <string name="toast_scroll_vertical">Vertical scroll %d%%</string>
+    <string name="toast_scroll_vertical_disabled">Can\'t change vertical scroll in live view</string>
+
+    <string name="toast_scroll_disabled">Can\'t scroll live view</string>
+
+    <string name="toast_view_live_zoom">Live view, zoom %1$.2fx</string>
+    <string name="toast_view_freeze_frame_zoom">Freeze frame, zoom %1$.2fx</string>
+    <string name="toast_view_freeze_frame">Freeze frame</string>
+
+    <string name="version_known">Version: %1$s</string>
+    <string name="version_unknown">unknown</string>
+
+    <string name="splash_title">Welcome to the Open Magnifier %1$s</string>
+    <string name="splash_body">The Open Magnifier is an immersive, privacy-first, open-source image magnifier designed to work seamlessly across various hardware. User can flip between live view (camera) and freeze frame (image)\n\n<b>Quick Tutorial</b>\n\n* Toggle between live and freeze frame: Single tap the screen or press Space on the keyboard\n* Adjust zoom: Pinch the screen with two finger or press Z on the keyboard\n* Scroll (freeze frame): Swipe the screen or press the arrow keys on the keyboard\n* Display help: Long press the screen or press H on the keyboard\n\n<b>Touchscreen Gestures</b>\n\n* Single tap toggles between the live view and freeze frame\n* Pinching the screen with two fingers zooms in or out (live view and freeze frame)\n* Double tap opens the preference dialog (live view only)\n* Long press opens the help dialog (live view only)\n\n<b>Keyboard Controls</b>\n\n* Space bar toggles between (live view and freeze frame)\n* z changes zoom levels (live view and freeze frame)\n\n* Arrow keys scrolls image (freeze frame only)\n* b changes brightness (freeze frame only)\n* c changes contrast (freeze frame only)\n* f changes color filters (freeze frame only)\n* h shows help\n* r changes rotation (freeze frame only)\n* x changes left/right scroll distance (freeze frame only)\n* y changes up/down scroll distance (freeze frame only)\n* v shows version number\n\n<b>About</b>\n\nOpen Magnifier Copyright © 2026 Mark Tamura\n\nThis program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\n<b>Open Source Libraries</b>\n\nSubsampling Scale Image View Copyright © 2018 Dave Morrissey\n\nLicensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0\n\n<b>Links</b>\n\nhttps://uglydog.io/magnifier/\n</string>
+    <string name="splash_checkbox">Don\'t show again on startup</string>
+
+</resources>

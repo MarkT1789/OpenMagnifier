@@ -1,0 +1,63 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/settings_title">
+
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/rotation_entries"
+            app:entryValues="@array/rotation_values"
+            app:key="rotation_setting"
+            app:title="@string/settings_rotation"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="1.0"
+            app:entries="@array/zoom_entries"
+            app:entryValues="@array/zoom_values"
+            app:key="zoom_setting"
+            app:title="@string/settings_zoom"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0.25"
+            app:entries="@array/pan_entries"
+            app:entryValues="@array/pan_values"
+            app:key="dx_setting"
+            app:title="@string/settings_dx"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0.25"
+            app:entries="@array/pan_entries"
+            app:entryValues="@array/pan_values"
+            app:key="dy_setting"
+            app:title="@string/settings_dy"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/color_entries"
+            app:entryValues="@array/color_values"
+            app:key="color_setting"
+            app:title="@string/settings_color"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0.0"
+            app:entries="@array/filter_entries"
+            app:entryValues="@array/brightness_values"
+            app:key="brightness_setting"
+            app:title="@string/settings_brightness"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="1.0"
+            app:entries="@array/filter_entries"
+            app:entryValues="@array/contrast_values"
+            app:key="contrast_setting"
+            app:title="@string/settings_contrast"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
