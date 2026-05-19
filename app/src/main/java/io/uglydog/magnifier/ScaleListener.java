@@ -28,7 +28,7 @@ public class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureList
     private final ScaleActions mActions;
     private long mTime;
     private float mScale;
-    
+
     public interface ScaleActions {
         void onScale(float scale, boolean finished);
     }

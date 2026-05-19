@@ -25,7 +25,7 @@ import androidx.annotation.NonNull;
 
 public class GestureListener extends GestureDetector.SimpleOnGestureListener {
     private static final String TAG = GestureListener.class.getSimpleName();
-    
+
     public interface GestureActions {
         boolean onToggleMode();
         void onOpenSettings();

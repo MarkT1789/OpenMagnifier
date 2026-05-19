@@ -55,7 +55,7 @@ public class CameraManager {
     }
 
     public void startCamera(@NonNull final OnCameraReadyListener listener) {
-        final ListenableFuture<ProcessCameraProvider> cameraProviderFuture = 
+        final ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(mActivity);
 
         cameraProviderFuture.addListener(new Runnable() {
@@ -75,7 +75,7 @@ public class CameraManager {
     private void bindUseCases(@NonNull final ProcessCameraProvider cameraProvider) {
         final Preview.Builder previewBuilder = new Preview.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_16_9);
-        
+
         final Camera2Interop.Extender<Preview> previewExtender = new Camera2Interop.Extender<>(previewBuilder);
         previewExtender.setCaptureRequestOption(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
 
@@ -102,9 +102,9 @@ public class CameraManager {
     }
 
     public void stopCamera() {
-        final ListenableFuture<ProcessCameraProvider> cameraProviderFuture = 
+        final ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(mActivity);
-    
+
         cameraProviderFuture.addListener(() -> {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();

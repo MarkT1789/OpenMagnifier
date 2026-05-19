@@ -24,7 +24,7 @@ import androidx.annotation.NonNull;
 
 public class InputHandler {
     private static final String TAG = InputHandler.class.getSimpleName();
-    
+
     public interface InputActions {
         void onChangeBrightnessSetting(KeyEvent event);
         void onChangeColorFilterSetting(KeyEvent event);

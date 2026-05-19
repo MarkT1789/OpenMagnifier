@@ -27,7 +27,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()

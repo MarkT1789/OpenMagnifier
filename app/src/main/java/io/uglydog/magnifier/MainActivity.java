@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (BuildConfig.DEBUG) Log.d(TAG,"onClick");
+                if (BuildConfig.DEBUG) Log.d(TAG, "onClick");
                 onToggleMode();
             }
         });
@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     protected void onResume() {
         super.onResume();
         if (BuildConfig.DEBUG) Log.d(TAG, "onResume");
-        
+
         mSettingsProvider.reload();
 
         if (mImageView.getVisibility() == View.VISIBLE) {
@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     public void onScale(final float scale, boolean finished) {
-        if (BuildConfig.DEBUG) Log.d(TAG,"onScale " + scale);
+        if (BuildConfig.DEBUG) Log.d(TAG, "onScale " + scale);
         final Camera camera = mCameraManager.getCamera();
         final LiveData<ZoomState> zoomStateLiveData = camera.getCameraInfo().getZoomState();
         if (zoomStateLiveData.getValue() != null) {
@@ -295,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             } else {
                 id = (id - 1 + steps + 1) % (steps + 1);
             }
-            scale = min + id * d; 
+            scale = min + id * d;
             mImageView.setScaleAndCenter(scale, center);
             ToastHelper.show(this, getString(R.string.toast_view_freeze_frame_zoom, scale / mImageView.getMinScale()));
         } else {
@@ -341,28 +341,28 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         PointF result;
         switch(event.getKeyCode()) {
             case KeyEvent.KEYCODE_DPAD_LEFT:
-                if (!event.isShiftPressed()) { 
+                if (!event.isShiftPressed()) {
                     result = new PointF(center.x - dx, center.y);
                 } else {
                     result = new PointF(0, center.y);
                 }
             break;
             case KeyEvent.KEYCODE_DPAD_RIGHT:
-                if (!event.isShiftPressed()) { 
+                if (!event.isShiftPressed()) {
                     result = new PointF(center.x + dx, center.y);
                 } else {
                     result = new PointF(mImageView.getWidth(), center.y);
                 }
             break;
             case KeyEvent.KEYCODE_DPAD_UP:
-                if (!event.isShiftPressed()) { 
+                if (!event.isShiftPressed()) {
                     result = new PointF(center.x, center.y - dy);
                 } else {
                     result = new PointF(center.x, 0);
                 }
             break;
             case KeyEvent.KEYCODE_DPAD_DOWN:
-                if (!event.isShiftPressed()) { 
+                if (!event.isShiftPressed()) {
                     result = new PointF(center.x, center.y + dy);
                 } else {
                     result = new PointF(center.x, mImageView.getHeight());
@@ -372,7 +372,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                 return;
         }
 
-        final SubsamplingScaleImageView.AnimationBuilder builder = 
+        final SubsamplingScaleImageView.AnimationBuilder builder =
             mImageView.animateScaleAndCenter(scale, result);
 
         if (builder != null) {
@@ -402,10 +402,10 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         String[] values = getResources().getStringArray(id);
         for (int i = 0; i < values.length; i++) {
             if (values[i].equals(current)) {
-                if (forward) { 
-                    i = (i + 1) % values.length; 
+                if (forward) {
+                    i = (i + 1) % values.length;
                 } else {
-                    i = (i - 1 + values.length) % values.length; 
+                    i = (i - 1 + values.length) % values.length;
                 }
                 return i;
             }
@@ -520,7 +520,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         final int color = mSettingsProvider.getColor();
 
         final float offset = 128f * (1f - contrast) + brightness;
-    
+
         mColorMatrix.set(new float[] {
             contrast, 0, 0, 0, offset,
             0, contrast, 0, 0, offset,
@@ -555,7 +555,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             });
             mColorMatrix.postConcat(yellowMatrix);
         }
-    
+
         mFilterPaint.setColorFilter(new ColorMatrixColorFilter(mColorMatrix));
         mImageView.setLayerType(View.LAYER_TYPE_HARDWARE, mFilterPaint);
     }
@@ -585,7 +585,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                     public void run() {
                         mImageView.setAlpha(0.0f);
                         mImageView.setVisibility(View.VISIBLE);
-                        
+
                         mImageView.setOnImageEventListener(new SubsamplingScaleImageView.DefaultOnImageEventListener() {
                             @Override
                             public void onReady() {
@@ -633,7 +633,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         final CheckBox checkBox = dialogView.findViewById(R.id.dont_show_again);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.splash_title,getVersion()))
+        builder.setTitle(getString(R.string.splash_title, getVersion()))
                .setView(dialogView)
                .setPositiveButton(getString(R.string.button_ok), new DialogInterface.OnClickListener() {
                    @Override

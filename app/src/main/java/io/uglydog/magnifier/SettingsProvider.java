@@ -26,7 +26,7 @@ import androidx.preference.PreferenceManager;
 
 public class SettingsProvider {
     private static final String TAG = SettingsProvider.class.getSimpleName();
-    
+
     private static final String KEY_BRIGHTNESS = "brightness_setting";
     private static final String KEY_COLOR = "color_setting";
     private static final String KEY_CONTRAST = "contrast_setting";
