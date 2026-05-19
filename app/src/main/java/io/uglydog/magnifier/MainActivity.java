@@ -41,6 +41,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -51,6 +52,8 @@ import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.ZoomState;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.LiveData;
 
 import com.davemorrissey.labs.subscaleview.ImageSource;
@@ -494,26 +497,17 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
      */
 
     private void setupWindow() {
+        EdgeToEdge.enable(this);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             getWindow().getAttributes().layoutInDisplayCutoutMode =
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            final WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-            }
-        } else {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN);
-        }
+        WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+
+        controller.hide(WindowInsetsCompat.Type.statusBars() | WindowInsetsCompat.Type.navigationBars());
+        controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
     }
 
     private boolean allPermissionsGranted() {
@@ -665,7 +659,16 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         }
 
         if (dialog.getWindow() != null) {
-            final int width = (int)(getResources().getDisplayMetrics().widthPixels * 0.75);
+            int width;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // Modern Android 11+ (and Android 15) window metrics calculation
+                android.view.WindowMetrics windowMetrics = getWindowManager().getCurrentWindowMetrics();
+                android.graphics.Rect bounds = windowMetrics.getBounds();
+                width = (int) (bounds.width() * 0.75);
+            } else {
+                // Fallback for older Android versions
+                width = (int) (getResources().getDisplayMetrics().widthPixels * 0.75);
+            }
             dialog.getWindow().setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT);
         }
     }
