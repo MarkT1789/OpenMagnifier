@@ -19,18 +19,6 @@ android {
         }
     }
 
-    packaging {
-        jniLibs {
-            // This ensures native libraries are aligned to 16KB
-            useLegacyPackaging = true 
-        }
-        resources {
-            // Ensures native libs are extracted and aligned during install
-            excludes += "/lib/arm64-v8a/libimage_processing_util_jni.so"
-        }
-    }
-
-    println("DEBUG: Keystore path is: ${keystoreProperties.getProperty("storeFile")}")
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties.getProperty("keyAlias") ?: "missing_alias"
@@ -47,8 +35,8 @@ android {
         applicationId = "io.uglydog.magnifier"
         minSdk = 24
         targetSdk = 36
-        versionCode = 100001
-        versionName = "1.0.0"
+        versionCode = 100010
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -84,7 +72,7 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
-    val cameraXVersion = "1.3.0"
+    val cameraXVersion = "1.6.1"
 
     // Core CameraX libraries
     implementation("androidx.camera:camera-core:$cameraXVersion")
@@ -103,14 +91,4 @@ dependencies {
 
     // ImageView replacement
     implementation("com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0")
-}
-
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "androidx.camera" && requested.name.contains("camera-core")) {
-            // Force a slightly newer version of CameraX if you're on an old one,
-            // as 1.4.0-alpha01+ has better 16KB support.
-            useVersion("1.4.0-beta01")
-        }
-    }
 }
