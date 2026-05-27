@@ -35,9 +35,10 @@ public class SettingsProvider {
     private static final String KEY_ROTATION = "rotation_setting";
     private static final String KEY_SPLASH_VERSION = "splash_version_setting";
     private static final String KEY_ZOOM = "zoom_setting";
+    private static final String KEY_FLASHLIGHT = "flashlight_setting";
 
     private final SharedPreferences mPrefs;
-    private float mBrightness, mContrast, mDx, mDy, mZoom;
+    private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight;
     private int mRotation, mColor;
     private String mSplashVersion;
 
@@ -55,6 +56,7 @@ public class SettingsProvider {
         mRotation =  getInt(KEY_ROTATION, 0);
         mSplashVersion = getString(KEY_SPLASH_VERSION, "-1");
         mZoom = getFloat(KEY_ZOOM, 1.0f);
+        mFlashlight = getFloat(KEY_FLASHLIGHT, 0.0f);
     }
 
     public synchronized float getBrightness() {
@@ -128,6 +130,17 @@ public class SettingsProvider {
         mZoom = zoom;
         setFloat(KEY_ZOOM, zoom);
     }
+
+    public synchronized float getFlashlight() {
+        return mFlashlight;
+    }
+
+    public synchronized void setFlashlight(final float flashlight) {
+        mFlashlight = flashlight;
+        setFloat(KEY_FLASHLIGHT, flashlight);
+    }
+
+    /***************************************************/
 
     private String getString(@NonNull final String key, @NonNull final String defaultValue) {
         String value = mPrefs.getString(key, defaultValue);

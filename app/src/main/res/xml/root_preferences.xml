@@ -58,6 +58,14 @@
             app:title="@string/settings_contrast"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            app:defaultValue="0.0"
+            app:entries="@array/flashlight_entries"
+            app:entryValues="@array/flashlight_values"
+            app:key="flashlight_setting"
+            app:title="@string/settings_flashlight"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

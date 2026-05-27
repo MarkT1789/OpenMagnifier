@@ -28,6 +28,9 @@ import android.graphics.PointF;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
@@ -47,6 +50,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
 import androidx.camera.core.Camera;
+import androidx.camera.core.CameraControl;
+import androidx.camera.core.CameraInfo;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.ZoomState;
@@ -65,7 +70,7 @@ import com.davemorrissey.labs.subscaleview.decoder.SkiaImageRegionDecoder;
 import java.io.File;
 
 @ExperimentalCamera2Interop
-public class MainActivity extends AppCompatActivity implements GestureListener.GestureActions, ScaleListener.ScaleActions, InputHandler.InputActions {
+public class MainActivity extends AppCompatActivity implements GestureListener.GestureActions, ScaleListener.ScaleActions, InputHandler.InputActions, Handler.Callback {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int CAMERA_PERMISSION_CODE = 100;
 
@@ -79,7 +84,13 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     private final ColorMatrix mColorMatrix = new ColorMatrix();
     private final ColorMatrix mGrayscaleMatrix = new ColorMatrix();
 
+    private final Handler mHandler = new Handler(Looper.getMainLooper(), this);
     private boolean mIsProcessing = false;
+
+    private static final int MSG_FLASHLIGHT_OFF = 1;
+    private static final int MSG_IMAGE_OFF = 2;
+    private static final int FLASHLIGHT_OFF_TIMEOUT = 2000;
+    private static final int IMAGE_OFF_TIMEOUT = 750;
 
     /*
      * Lifecycle
@@ -127,6 +138,8 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
         if (mImageView.getVisibility() == View.VISIBLE) {
             mImageView.setOrientation(mSettingsProvider.getRotation());
+        } else {
+            toggleFlashlight(true);
         }
 
         final Camera camera = mCameraManager.getCamera();
@@ -140,6 +153,8 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     protected void onDestroy() {
+        mHandler.removeCallbacksAndMessages(null);
+
         if (mCameraManager != null) {
             mCameraManager.stopCamera();
         }
@@ -234,6 +249,35 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             updateFilters();
         } else {
             ToastHelper.show(this, getString(R.string.toast_contrast_disabled));
+        }
+    }
+
+    @Override
+    public void onChangeFlashlightSetting(@NonNull final KeyEvent event) {
+        if (!hasFlash()) {
+            ToastHelper.show(this, getString(R.string.toast_flashlight_none));
+            return;
+        }
+
+        if (mImageView.getVisibility() == View.VISIBLE) {
+            ToastHelper.show(this, getString(R.string.toast_flashlight_disabled));
+        } else {
+            if (!hasFlashLevels()) {
+                final float flashlight = mSettingsProvider.getFlashlight() == 0.0f ? 1.0f : 0.0f;
+                final int id = mSettingsProvider.getFlashlight() == 0.0f ? 5 : 0;
+                final String key = getStringItem(R.array.flashlight_entries, id);
+                ToastHelper.show(this, getString(R.string.toast_flashlight, key));
+                mSettingsProvider.setFlashlight(flashlight);
+                toggleFlashlight(flashlight != 0.0f);
+            } else {
+                final int id = getNextString(R.array.flashlight_values, String.valueOf(mSettingsProvider.getFlashlight()), !event.isShiftPressed());
+                final String value = getStringItem(R.array.flashlight_values, id);
+                final String key = getStringItem(R.array.flashlight_entries, id);
+                mSettingsProvider.setFlashlight(Float.parseFloat(value));
+                ToastHelper.show(this, getString(R.string.toast_flashlight, key));
+                final float flashlight = Float.parseFloat(value);
+                toggleFlashlight(flashlight != 0.0f);
+            }
         }
     }
 
@@ -433,9 +477,9 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     @Override
     public boolean onToggleMode() {
         if (mImageView.getVisibility() == View.VISIBLE) {
-            mImageView.setVisibility(View.GONE);
-            mImageView.recycle();
-            mIsProcessing = false;
+            mHandler.removeMessages(MSG_IMAGE_OFF);
+            final boolean immediate = mHandler.hasMessages(MSG_FLASHLIGHT_OFF) || (mSettingsProvider.getFlashlight() == 0.0f);
+            mHandler.sendEmptyMessageDelayed(MSG_IMAGE_OFF, immediate ? 0 : IMAGE_OFF_TIMEOUT);
 
             final Camera camera = mCameraManager.getCamera();
             final LiveData<ZoomState> zoomStateLiveData = camera.getCameraInfo().getZoomState();
@@ -445,6 +489,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                 ToastHelper.show(this, getString(R.string.toast_view_live_zoom, zoom));
             }
             //FIXME ToastHelper.show(this, getString(R.string.toast_view_live_zoom, mSettingsProvider.getZoom()));
+            toggleFlashlight(true);
             return true;
         }
 
@@ -568,6 +613,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                 final float savedZoom = mSettingsProvider.getZoom();
                 camera.getCameraControl().setZoomRatio(savedZoom);
                 ToastHelper.show(MainActivity.this, getString(R.string.toast_view_live_zoom, savedZoom));
+                toggleFlashlight(true);
             }
         });
     }
@@ -593,6 +639,8 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                                 mImageView.setFocusable(true);
                                 mImageView.setFocusableInTouchMode(true);
                                 mImageView.requestFocus();
+                                mHandler.removeMessages(MSG_FLASHLIGHT_OFF);
+                                mHandler.sendEmptyMessageDelayed(MSG_FLASHLIGHT_OFF, FLASHLIGHT_OFF_TIMEOUT);
                             }
                         });
 
@@ -671,5 +719,73 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             }
             dialog.getWindow().setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT);
         }
+    }
+
+    private boolean hasFlash() {
+        final Camera camera = mCameraManager.getCamera();
+        if (camera == null) {
+            return false;
+        }
+
+        return camera.getCameraInfo().hasFlashUnit();
+    }
+
+    private boolean hasFlashLevels() {
+        final Camera camera = mCameraManager.getCamera();
+        if (camera == null) {
+            return false;
+        }
+        final CameraInfo cameraInfo = camera.getCameraInfo();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return cameraInfo.getMaxTorchStrengthLevel() > 1;
+        }
+        return false;
+    }
+
+    @ExperimentalCamera2Interop
+    private void toggleFlashlight(final boolean enable) {
+        mHandler.removeMessages(MSG_FLASHLIGHT_OFF);
+        final Camera camera = mCameraManager.getCamera();
+        if (camera == null) {
+            return;
+        }
+
+        final CameraControl cameraControl = camera.getCameraControl();
+        final CameraInfo cameraInfo = camera.getCameraInfo();
+        if (!cameraInfo.hasFlashUnit()) {
+            return;
+        }
+
+        final float flashlight = mSettingsProvider.getFlashlight();
+        if (!enable || flashlight == 0.0f) {
+            cameraControl.enableTorch(false);
+        } else {
+            int maxStrength = 1;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                maxStrength = cameraInfo.getMaxTorchStrengthLevel();
+            }
+
+            if (maxStrength > 1) {
+                final int strength = (int)(maxStrength * flashlight);
+                cameraControl.setTorchStrengthLevel(strength == 0 ? 1 : strength);
+            }
+
+            cameraControl.enableTorch(true);
+        }
+    }
+
+    @Override
+    public boolean handleMessage(@NonNull final Message msg) {
+        switch (msg.what) {
+            case MSG_FLASHLIGHT_OFF:
+                toggleFlashlight(false);
+                return true;
+            case MSG_IMAGE_OFF:
+                mImageView.setVisibility(View.GONE);
+                mImageView.recycle();
+                mIsProcessing = false;
+                return true;
+        }
+        return false;
     }
 }
