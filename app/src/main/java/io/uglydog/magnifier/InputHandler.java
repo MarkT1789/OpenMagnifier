@@ -30,6 +30,7 @@ public class InputHandler {
         void onChangeColorFilterSetting(KeyEvent event);
         void onChangeContrastSetting(KeyEvent event);
         void onChangeFlashlightSetting(KeyEvent event);
+        void onChangeSpeakSetting(KeyEvent event);
         void onChangePanSetting(KeyEvent event);
         void onChangeRotationSetting(KeyEvent event);
         void onChangeView();
@@ -72,6 +73,10 @@ public class InputHandler {
             case KeyEvent.KEYCODE_R:
                 if (isFirstKeyDown)
                     actions.onChangeRotationSetting(event);
+                return true;
+            case KeyEvent.KEYCODE_S:
+                if (isFirstKeyDown)
+                    actions.onChangeSpeakSetting(event);
                 return true;
             case KeyEvent.KEYCODE_V:
                 if (isFirstKeyDown)

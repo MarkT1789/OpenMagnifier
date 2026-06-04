@@ -36,10 +36,11 @@ public class SettingsProvider {
     private static final String KEY_SPLASH_VERSION = "splash_version_setting";
     private static final String KEY_ZOOM = "zoom_setting";
     private static final String KEY_FLASHLIGHT = "flashlight_setting";
+    private static final String KEY_SPEAK = "speak_setting";
 
     private final SharedPreferences mPrefs;
     private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight;
-    private int mRotation, mColor;
+    private int mRotation, mColor, mSpeak;
     private String mSplashVersion;
 
     public SettingsProvider(@NonNull final Context context) {
@@ -57,6 +58,7 @@ public class SettingsProvider {
         mSplashVersion = getString(KEY_SPLASH_VERSION, "-1");
         mZoom = getFloat(KEY_ZOOM, 1.0f);
         mFlashlight = getFloat(KEY_FLASHLIGHT, 0.0f);
+        mSpeak = getInt(KEY_SPEAK, 0);
     }
 
     public synchronized float getBrightness() {
@@ -138,6 +140,15 @@ public class SettingsProvider {
     public synchronized void setFlashlight(final float flashlight) {
         mFlashlight = flashlight;
         setFloat(KEY_FLASHLIGHT, flashlight);
+    }
+
+    public synchronized int getSpeak() {
+        return mSpeak;
+    }
+
+    public synchronized void setSpeak(final int speak) {
+        mSpeak = speak;
+        setInt(KEY_SPEAK, speak);
     }
 
     /***************************************************/

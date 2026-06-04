@@ -66,6 +66,14 @@
             app:title="@string/settings_flashlight"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/speak_entries"
+            app:entryValues="@array/speak_values"
+            app:key="speak_setting"
+            app:title="@string/settings_speak"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

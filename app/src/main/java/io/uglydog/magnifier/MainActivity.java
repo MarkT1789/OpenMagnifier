@@ -72,6 +72,7 @@ import java.io.File;
 @ExperimentalCamera2Interop
 public class MainActivity extends AppCompatActivity implements GestureListener.GestureActions, ScaleListener.ScaleActions, InputHandler.InputActions, Handler.Callback {
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String FILE = "enhanced_text.jpg";
     private static final int CAMERA_PERMISSION_CODE = 100;
 
     private CameraManager mCameraManager;
@@ -86,6 +87,9 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     private final Handler mHandler = new Handler(Looper.getMainLooper(), this);
     private boolean mIsProcessing = false;
+
+    private TextReader mTextReader;
+    private TextReaderOverlay mTextReaderOverlay;
 
     private static final int MSG_FLASHLIGHT_OFF = 1;
     private static final int MSG_IMAGE_OFF = 2;
@@ -110,6 +114,8 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mCameraManager = new CameraManager(this, findViewById(R.id.viewFinder));
         mGestureDetector = new GestureDetector(this, new GestureListener(this));
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener(this));
+        mTextReaderOverlay = findViewById(R.id.textOverlayView);
+        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsProvider);
 
         showSplashDialog(false);
         updateFilters();
@@ -130,11 +136,21 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (BuildConfig.DEBUG) Log.d(TAG, "onPause");
+        mTextReader.stop();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         if (BuildConfig.DEBUG) Log.d(TAG, "onResume");
 
         mSettingsProvider.reload();
+        if (mSettingsProvider.getSpeak() != 0) {
+            mTextReader.start();
+        }
 
         if (mImageView.getVisibility() == View.VISIBLE) {
             mImageView.setOrientation(mSettingsProvider.getRotation());
@@ -153,6 +169,9 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     protected void onDestroy() {
+        if (mTextReader != null) {
+            mTextReader.destroy();
+        }
         mHandler.removeCallbacksAndMessages(null);
 
         if (mCameraManager != null) {
@@ -162,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             mImageView.recycle();
         }
         try {
-            final File photoFile = new File(getCacheDir(), "enhanced_text.jpg");
+            final File photoFile = new File(getCacheDir(), FILE);
             if (photoFile.exists()) {
                 photoFile.delete();
             }
@@ -316,6 +335,19 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             ToastHelper.show(this, getString(R.string.toast_rotation, rotation));
         } else {
             ToastHelper.show(this, getString(R.string.toast_rotation_disabled));
+        }
+    }
+
+    @Override
+    public void onChangeSpeakSetting(@NonNull final KeyEvent event) {
+        int speak = 1 - mSettingsProvider.getSpeak();
+        mSettingsProvider.setSpeak(speak);
+        if (speak == 0) {
+            mTextReader.stop();
+            ToastHelper.show(this, getString(R.string.toast_speak_disabled));
+        } else {
+            mTextReader.start();
+            ToastHelper.show(this, getString(R.string.toast_speak_enabled));
         }
     }
 
@@ -490,6 +522,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             }
             //FIXME ToastHelper.show(this, getString(R.string.toast_view_live_zoom, mSettingsProvider.getZoom()));
             toggleFlashlight(true);
+            mTextReader.stop();
             return true;
         }
 
@@ -621,7 +654,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     private void captureToView() {
         mIsProcessing = true;
         mImageView.recycle();
-        final File photoFile = new File(getCacheDir(), "enhanced_text.jpg");
+        final File photoFile = new File(getCacheDir(), FILE);
 
         mCameraManager.takePhoto(photoFile, new ImageCapture.OnImageSavedCallback() {
             @Override
@@ -641,6 +674,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                                 mImageView.requestFocus();
                                 mHandler.removeMessages(MSG_FLASHLIGHT_OFF);
                                 mHandler.sendEmptyMessageDelayed(MSG_FLASHLIGHT_OFF, FLASHLIGHT_OFF_TIMEOUT);
+                                mTextReader.start();
                             }
                         });
 

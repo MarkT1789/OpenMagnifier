@@ -26,5 +26,10 @@
             android:background="#000000"
             android:visibility="gone" />
 
+        <io.uglydog.magnifier.TextReaderOverlay
+            android:id="@+id/textOverlayView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
     </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

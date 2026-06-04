@@ -19,3 +19,11 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep all Google Play Services and GMS tasks intact
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# Keep ML Kit text recognition classes from being stripped or renaming
+-keep class com.google.mlkit.** { *; }
+-dontwarn com.google.mlkit.**
