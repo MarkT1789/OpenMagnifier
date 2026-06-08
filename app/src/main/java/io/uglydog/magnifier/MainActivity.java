@@ -148,9 +148,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         if (BuildConfig.DEBUG) Log.d(TAG, "onResume");
 
         mSettingsProvider.reload();
-        if (mSettingsProvider.getSpeak() != 0) {
-            mTextReader.start();
-        }
+        mTextReader.start();
 
         if (mImageView.getVisibility() == View.VISIBLE) {
             mImageView.setOrientation(mSettingsProvider.getRotation());
@@ -340,15 +338,13 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     public void onChangeSpeakSetting(@NonNull final KeyEvent event) {
-        int speak = 1 - mSettingsProvider.getSpeak();
+        final int id = getNextString(R.array.speak_values, String.valueOf(mSettingsProvider.getSpeak()), !event.isShiftPressed());
+        final String value = getStringItem(R.array.speak_values, id);
+        final String key = getStringItem(R.array.speak_entries, id);
+        final int speak = Integer.parseInt(value);
         mSettingsProvider.setSpeak(speak);
-        if (speak == 0) {
-            mTextReader.stop();
-            ToastHelper.show(this, getString(R.string.toast_speak_disabled));
-        } else {
-            mTextReader.start();
-            ToastHelper.show(this, getString(R.string.toast_speak_enabled));
-        }
+        ToastHelper.show(this, getString(R.string.toast_speak, key));
+        mTextReader.start();
     }
 
     @Override

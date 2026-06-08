@@ -41,6 +41,9 @@ import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
+import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
+import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
@@ -56,7 +59,7 @@ public class TextReader implements Handler.Callback {
     private static final int OFFSET = 20;
     private static final int MSG_SPEAK = 1;
 
-    private final TextToSpeech mTts;
+    private TextToSpeech mTts;
     private SubsamplingScaleImageView mImageView;
     private final File mFile;
 
@@ -66,8 +69,9 @@ public class TextReader implements Handler.Callback {
     private final Handler mBackgroundHandler;
     private final HandlerThread mBackgroundThread;
     private final SettingsProvider mSettingsProvider;
+    private final Context mContext;
 
-    private final TextRecognizer mTextRecognizer;
+    private TextRecognizer mTextRecognizer;
 
     private volatile boolean mTtsReady;
     private volatile boolean mIsDestroyed;
@@ -75,6 +79,7 @@ public class TextReader implements Handler.Callback {
     private volatile int mCurrentTaskToken = 0;
 
     private Task<Text> mActiveRecognitionTask = null;
+    private int mSpeak;
 
     private static class TtsInitListener implements TextToSpeech.OnInitListener {
         private final WeakReference<TextReader> mReaderRef;
@@ -284,12 +289,16 @@ public class TextReader implements Handler.Callback {
     }
 
     public TextReader(final Context context, final SubsamplingScaleImageView imageView, final TextReaderOverlay overlay, final String file, final SettingsProvider settings) {
+        mContext = context;
         mImageView = imageView;
         mTextReaderOverlay = overlay;
         mFile = new File(context.getCacheDir(), file);
         mSettingsProvider = settings;
         mTtsReady = false;
         mIsDestroyed = false;
+        mTextRecognizer = null;
+        mTts = null;
+        mSpeak = -1;
 
         mBackgroundThread = new HandlerThread("TextReaderBackground");
         mBackgroundThread.start();
@@ -297,11 +306,45 @@ public class TextReader implements Handler.Callback {
 
         mMainHandler = new Handler(Looper.getMainLooper(), this);
 
-        mTts = new TextToSpeech(context.getApplicationContext(), new TtsInitListener(this, Locale.getDefault()));
-        mTts.setOnUtteranceProgressListener(new TtsProgressListener(this));
         mImageView.setOnStateChangedListener(new ImageStateListener(this));
+    }
 
-        mTextRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+    private void setupTextRecognizer() {
+        final int speak = mSettingsProvider.getSpeak();
+        if (speak == mSpeak) {
+            return;
+        }
+
+        mSpeak = speak;
+
+        if (mTextRecognizer != null) {
+            mTextRecognizer.close();
+            mTextRecognizer = null;
+        }
+
+        switch(mSpeak) {
+            case 1: /* Latin */
+                Log.i(TAG, "TextRecognizer Latin");
+                mTextRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+            break;
+            case 2: /* Chinese */
+                Log.i(TAG, "TextRecognizer Chinese");
+                mTextRecognizer = TextRecognition.getClient(new ChineseTextRecognizerOptions.Builder().build());
+            break;
+            case 3: /* Devanagari */
+                Log.i(TAG, "TextRecognizer Devanagari");
+                mTextRecognizer = TextRecognition.getClient(new DevanagariTextRecognizerOptions.Builder().build());
+            break;
+            case 4: /* Japanese */
+                Log.i(TAG, "TextRecognizer Japanese");
+                mTextRecognizer = TextRecognition.getClient(new JapaneseTextRecognizerOptions.Builder().build());
+            break;
+        }
+
+        if (mTts == null && mSpeak > 0) {
+            mTts = new TextToSpeech(mContext.getApplicationContext(), new TtsInitListener(this, Locale.getDefault()));
+            mTts.setOnUtteranceProgressListener(new TtsProgressListener(this));
+        }
     }
 
     @Override
@@ -328,6 +371,7 @@ public class TextReader implements Handler.Callback {
     }
 
     public void start() {
+        setupTextRecognizer();
         mMainHandler.removeMessages(MSG_SPEAK);
         if (mSettingsProvider.getSpeak() != 0 && !mIsDestroyed) {
             mMainHandler.sendEmptyMessageDelayed(MSG_SPEAK, 2000);

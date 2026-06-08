@@ -35,8 +35,8 @@ android {
         applicationId = "io.uglydog.magnifier"
         minSdk = 24
         targetSdk = 36
-        versionCode = 102000
-        versionName = "1.2.0"
+        versionCode = 103000
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -92,7 +92,13 @@ dependencies {
     // ImageView replacement
     implementation("com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0")
 
-    // Text Recogition (bundled)
+    // Text Recognition (bundled)
     // Latin (English, Spanish, French, etc.)
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    // Chinese
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    // Devanagari
+    implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
+    // Japanese
+    implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
 }

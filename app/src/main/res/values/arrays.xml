@@ -96,9 +96,15 @@
     <string-array name="speak_entries">
         <item>@string/entries_disabled</item>
         <item>@string/entries_latin</item>
+        <item>@string/entries_chinese</item>
+        <item>@string/entries_devanagari</item>
+        <item>@string/entries_japanese</item>
     </string-array>
     <string-array name="speak_values">
         <item>0</item>
         <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 </resources>
