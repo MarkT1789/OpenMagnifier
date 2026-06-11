@@ -187,7 +187,9 @@ public class TextReader implements Handler.Callback {
             if (reader.mTextReaderOverlay != null) {
                 reader.mTextReaderOverlay.clear();
             }
-            reader.mTts.stop();
+            if (reader.mTts != null) {
+                reader.mTts.stop();
+            }
             reader.start();
         }
 
@@ -198,7 +200,9 @@ public class TextReader implements Handler.Callback {
             if (reader.mTextReaderOverlay != null) {
                 reader.mTextReaderOverlay.clear();
             }
-            reader.mTts.stop();
+            if (reader.mTts != null) {
+                reader.mTts.stop();
+            }
             reader.start();
         }
     }
