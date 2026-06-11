@@ -35,8 +35,8 @@ android {
         applicationId = "io.uglydog.magnifier"
         minSdk = 24
         targetSdk = 36
-        versionCode = 103000
-        versionName = "1.3.0"
+        versionCode = 104000
+        versionName = "1.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -101,4 +101,7 @@ dependencies {
     implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
     // Japanese
     implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
+
+    // Google ML Kit Text Translation dependency
+    implementation("com.google.mlkit:translate:17.0.3")
 }

@@ -519,6 +519,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             //FIXME ToastHelper.show(this, getString(R.string.toast_view_live_zoom, mSettingsProvider.getZoom()));
             toggleFlashlight(true);
             mTextReader.stop();
+            mTextReaderOverlay.showCopyright(false);
             return true;
         }
 

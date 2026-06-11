@@ -31,21 +31,36 @@ import androidx.annotation.Nullable;
 public class TextReaderOverlay extends View {
 
     private static final float STROKE_WIDTH = 11.0f;
+    private static final float TEXT_SIZE = 48.0f;
+    private static final int OFFSET = 20;
     private final Rect mRect;
-    private final Paint mPaint;
+    private final Paint mBorderPaint;
+    private final Paint mTextPaint;
     private final Handler mMainHandler;
+    private final String mText;
+
+    private boolean mShowCopyright;
 
     public TextReaderOverlay(@NonNull final Context context, @Nullable final AttributeSet attrs) {
         super(context, attrs);
 
-        mPaint = new Paint();
-        mPaint.setColor(Color.GREEN);
-        mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setStrokeWidth(STROKE_WIDTH);
-        mPaint.setAntiAlias(true);
+        mBorderPaint = new Paint();
+        mBorderPaint.setColor(Color.GREEN);
+        mBorderPaint.setStyle(Paint.Style.STROKE);
+        mBorderPaint.setStrokeWidth(STROKE_WIDTH);
+        mBorderPaint.setAntiAlias(true);
+
+        mTextPaint = new Paint();
+        mTextPaint.setColor(Color.WHITE);
+        mTextPaint.setTextSize(TEXT_SIZE);
+        mTextPaint.setAntiAlias(true);
+
+        mText = context.getString(R.string.translate_attribution);
 
         mRect = new Rect();
         mMainHandler = new Handler(Looper.getMainLooper());
+
+        mShowCopyright = false;
     }
 
     public void clear() {
@@ -84,13 +99,37 @@ public class TextReaderOverlay extends View {
         super.onDraw(canvas);
 
         if (!mRect.isEmpty()) {
-            canvas.drawRect(mRect, mPaint);
+            canvas.drawRect(mRect, mBorderPaint);
         }
+        drawCopyright(canvas);
     }
 
     @Override
     protected void onDetachedFromWindow() {
         mMainHandler.removeCallbacksAndMessages(null);
         super.onDetachedFromWindow();
+    }
+
+    public void showCopyright(final boolean enable) {
+        mShowCopyright = enable;
+    }
+
+    private void drawCopyright(final Canvas canvas) {
+
+        if (!mShowCopyright) {
+            return;
+        }
+
+        final Rect bounds = new Rect();
+        mTextPaint.getTextBounds(mText, 0, mText.length(), bounds);
+        final int textHeight = bounds.height();
+
+        final int marginLeft = OFFSET * 2;
+        final int marginBottom = OFFSET;
+
+        final float x = marginLeft;
+        final float y = canvas.getHeight() - marginBottom - bounds.bottom;
+
+        canvas.drawText(mText, x, y, mTextPaint);
     }
 }

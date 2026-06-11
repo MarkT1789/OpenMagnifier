@@ -72,6 +72,7 @@ public class TextReader implements Handler.Callback {
     private final Context mContext;
 
     private TextRecognizer mTextRecognizer;
+    private TranslationManager mTranslationManager;
 
     private volatile boolean mTtsReady;
     private volatile boolean mIsDestroyed;
@@ -204,13 +205,15 @@ public class TextReader implements Handler.Callback {
 
     private static class TextRecognitionSuccessListener implements OnSuccessListener<Text> {
         private final WeakReference<TextReader> mReaderRef;
+        private final WeakReference<TranslationManager> mTranslationManagerRef;
         private final Bitmap mBitmap;
         private final int mViewWidth;
         private final int mViewHeight;
         private final int mToken;
 
-        TextRecognitionSuccessListener(final TextReader reader, final Bitmap bitmap, final int viewWidth, final int viewHeight, final int token) {
+        TextRecognitionSuccessListener(final TextReader reader, final TranslationManager translationManager, final Bitmap bitmap, final int viewWidth, final int viewHeight, final int token) {
             mReaderRef = new WeakReference<>(reader);
+            mTranslationManagerRef = new WeakReference<>(translationManager);
             mBitmap = bitmap;
             mViewWidth = viewWidth;
             mViewHeight = viewHeight;
@@ -220,7 +223,8 @@ public class TextReader implements Handler.Callback {
         @Override
         public void onSuccess(final Text visionText) {
             final TextReader reader = mReaderRef.get();
-            if (reader == null || reader.mIsDestroyed || mToken != reader.mCurrentTaskToken || reader.mImageView == null || !reader.mImageView.isReady()) {
+            final TranslationManager translationManager = mTranslationManagerRef.get();
+            if (reader == null || translationManager == null || reader.mIsDestroyed || mToken != reader.mCurrentTaskToken || reader.mImageView == null || !reader.mImageView.isReady()) {
                 if (mBitmap != null && !mBitmap.isRecycled()) {
                     mBitmap.recycle();
                 }
@@ -250,7 +254,7 @@ public class TextReader implements Handler.Callback {
                     final String id = String.format(Locale.US, "%d:%d:%d:%d", scaledBounds.left, scaledBounds.top, scaledBounds.right, scaledBounds.bottom);
                     final String text = block.getText();
 
-                    reader.mTts.speak(text, TextToSpeech.QUEUE_ADD, null, id);
+                    translationManager.translate(reader.mTts, text, id);
                     if (BuildConfig.DEBUG) Log.d(TAG, "TextRecognition: text=" + text + " bounds=" + bounds + " id=" + id);
                 }
             } finally {
@@ -297,6 +301,7 @@ public class TextReader implements Handler.Callback {
         mTtsReady = false;
         mIsDestroyed = false;
         mTextRecognizer = null;
+        mTranslationManager = new TranslationManager(context, overlay);
         mTts = null;
         mSpeak = -1;
 
@@ -311,6 +316,9 @@ public class TextReader implements Handler.Callback {
 
     private void setupTextRecognizer() {
         final int speak = mSettingsProvider.getSpeak();
+        if (speak > 0) {
+            mTranslationManager.prepare(mSettingsProvider.getSource(), mSettingsProvider.getDest());
+        }
         if (speak == mSpeak) {
             return;
         }
@@ -472,8 +480,8 @@ public class TextReader implements Handler.Callback {
             final InputImage image = InputImage.fromBitmap(bitmap, 0);
 
             mActiveRecognitionTask = mTextRecognizer.process(image);
-            mActiveRecognitionTask.addOnSuccessListener(new TextRecognitionSuccessListener(this, bitmap, viewWidth, viewHeight, token))
-                                  .addOnFailureListener(new TextRecognitionFailureListener(this, bitmap, token));
+            mActiveRecognitionTask.addOnSuccessListener(new TextRecognitionSuccessListener(this, mTranslationManager, bitmap, viewWidth, viewHeight, token))
+                .addOnFailureListener(new TextRecognitionFailureListener(this, bitmap, token));
 
         } catch (Exception e) {
             Log.e(TAG, "TextRecognition: error exception=", e);
@@ -496,6 +504,8 @@ public class TextReader implements Handler.Callback {
         mMainHandler.removeCallbacksAndMessages(null);
 
         mBackgroundThread.quitSafely();
+
+        mTranslationManager.close();
 
         if (mTextReaderOverlay != null) {
             mTextReaderOverlay.clear();

@@ -24,9 +24,20 @@ import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.OnApplyWindowInsetsListener;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.preference.ListPreference;
 import androidx.preference.PreferenceFragmentCompat;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,6 +64,42 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 int[] entries = {4, 3, 2, 1};
                 deleteEntries(flashlightPreference, entries);
             }
+        }
+        if (!isGooglePlayDevice(getContext())) {
+            Log.i(TAG, "onCreatePreference: not Google Play device");
+            final ListPreference sourcePreference = findPreference("source_setting");
+            final ListPreference destPreference = findPreference("dest_setting");
+            if (sourcePreference != null) {
+                sourcePreference.setEnabled(false);
+            }
+            if (destPreference != null) {
+                destPreference.setEnabled(false);
+            }
+        }
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        final ViewGroup listView = (ViewGroup) getListView();
+        if (listView != null) {
+            listView.setClipToPadding(false);
+
+            ViewCompat.setOnApplyWindowInsetsListener(listView, new OnApplyWindowInsetsListener() {
+                @NonNull
+                @Override
+                public WindowInsetsCompat onApplyWindowInsets(@NonNull View v, @NonNull WindowInsetsCompat windowInsets) {
+                    final Insets systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+                    v.setPadding(
+                        v.getPaddingLeft(),
+                        v.getPaddingTop(),
+                        v.getPaddingRight(),
+                        systemBars.bottom
+                    );
+                    return windowInsets;
+                }
+            });
         }
     }
 
@@ -121,5 +168,12 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         }
 
         return false;
+    }
+
+    private boolean isGooglePlayDevice(final Context context) {
+        final GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        final int resultCode = apiAvailability.isGooglePlayServicesAvailable(context);
+
+        return resultCode == ConnectionResult.SUCCESS;
     }
 }

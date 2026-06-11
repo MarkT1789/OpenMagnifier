@@ -74,6 +74,22 @@
             app:title="@string/settings_speak"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/lang_entries"
+            app:entryValues="@array/lang_values"
+            app:key="source_setting"
+            app:title="@string/settings_source"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/lang_entries"
+            app:entryValues="@array/lang_values"
+            app:key="dest_setting"
+            app:title="@string/settings_dest"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>
