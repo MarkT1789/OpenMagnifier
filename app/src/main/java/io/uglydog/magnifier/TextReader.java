@@ -76,6 +76,7 @@ public class TextReader implements Handler.Callback {
 
     private volatile boolean mTtsReady;
     private volatile boolean mIsDestroyed;
+    private volatile boolean mTtsStarting;
 
     private volatile int mCurrentTaskToken = 0;
 
@@ -95,6 +96,7 @@ public class TextReader implements Handler.Callback {
         public void onInit(final int status) {
             final TextReader reader = mReaderRef.get();
             if (reader == null || reader.mIsDestroyed) return;
+            reader.mTtsStarting = false;
 
             if (status == TextToSpeech.SUCCESS) {
                 final int result = reader.mTts.setLanguage(mLocale);
@@ -303,6 +305,7 @@ public class TextReader implements Handler.Callback {
         mFile = new File(context.getCacheDir(), file);
         mSettingsProvider = settings;
         mTtsReady = false;
+        mTtsStarting = false;
         mIsDestroyed = false;
         mTextRecognizer = null;
         mTranslationManager = new TranslationManager(context, overlay);
@@ -354,6 +357,7 @@ public class TextReader implements Handler.Callback {
         }
 
         if (mTts == null && mSpeak > 0) {
+            mTtsStarting = true;
             mTts = new TextToSpeech(mContext.getApplicationContext(), new TtsInitListener(this, Locale.getDefault()));
             mTts.setOnUtteranceProgressListener(new TtsProgressListener(this));
         }
@@ -363,6 +367,10 @@ public class TextReader implements Handler.Callback {
     public boolean handleMessage(@NonNull final Message msg) {
         if (msg.what == MSG_SPEAK) {
             if (BuildConfig.DEBUG) Log.d(TAG, "handleMessage: MSG_SPEAK");
+            if (mTtsStarting && !mTtsReady && !mIsDestroyed) {
+                if (BuildConfig.DEBUG) Log.d(TAG, "handleMessage: MSG_SPEAK tts not ready");
+                mMainHandler.sendEmptyMessageDelayed(MSG_SPEAK, 250);
+            }
             if (mTtsReady && !mIsDestroyed) {
                 shouldSpeak();
             }
@@ -372,10 +380,19 @@ public class TextReader implements Handler.Callback {
     }
 
     public void stop() {
+        if (BuildConfig.DEBUG) Log.d(TAG, "stop");
         mMainHandler.removeMessages(MSG_SPEAK);
         mBackgroundHandler.removeCallbacksAndMessages(null);
         if (mTextReaderOverlay != null) {
             mTextReaderOverlay.clear();
+        }
+        if (mTextRecognizer != null) {
+            mTextRecognizer.close();
+            mTextRecognizer = null;
+            mSpeak = -1;
+        }
+        if (mTranslationManager != null) {
+            mTranslationManager.close();
         }
         if (mTtsReady && !mIsDestroyed) {
             mTts.stop();
@@ -383,6 +400,7 @@ public class TextReader implements Handler.Callback {
     }
 
     public void start() {
+        if (BuildConfig.DEBUG) Log.d(TAG, "start");
         setupTextRecognizer();
         mMainHandler.removeMessages(MSG_SPEAK);
         if (mSettingsProvider.getSpeak() != 0 && !mIsDestroyed) {
@@ -465,7 +483,7 @@ public class TextReader implements Handler.Callback {
     public void processFile(@NonNull final Rect visibleRect, final int viewWidth, final int viewHeight, final int token) {
         if (BuildConfig.DEBUG) Log.d(TAG, "processFile");
 
-        if (mIsDestroyed || token != mCurrentTaskToken) {
+        if (mIsDestroyed || token != mCurrentTaskToken || mTextRecognizer == null) {
             return;
         }
 
@@ -498,6 +516,7 @@ public class TextReader implements Handler.Callback {
     public void destroy() {
         mIsDestroyed = true;
         mTtsReady = false;
+        mTtsStarting = false;
 
         if (mImageView != null) {
             mImageView.setOnStateChangedListener(null);
