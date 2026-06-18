@@ -210,7 +210,7 @@ public class TranslationManager {
 
     public synchronized void translate(@NonNull final TextToSpeech tts, @NonNull final String text, @NonNull final String id) {
         if (!mIsReady || mTranslator == null) {
-            setTtsLanguage(mSourceId, tts);
+            setTtsLanguage(0, tts);
             tts.speak(text, TextToSpeech.QUEUE_ADD, null, id);
             return;
         }
@@ -286,6 +286,7 @@ public class TranslationManager {
     @Nullable
     private Locale getTtsLocale(final int index) {
         switch (index) {
+            case 0:  return Locale.getDefault();
             case 1:  return new Locale("bn", "BD");
             case 2:  return Locale.SIMPLIFIED_CHINESE;
             case 3:  return Locale.ENGLISH;
