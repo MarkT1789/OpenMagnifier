@@ -51,6 +51,7 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import java.io.File;
 import java.io.FileInputStream;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Locale;
 
 public class TextReader implements Handler.Callback {
@@ -82,6 +83,7 @@ public class TextReader implements Handler.Callback {
 
     private Task<Text> mActiveRecognitionTask = null;
     private int mSpeak;
+    private final HashMap<String, String> mHashMap;
 
     private static class TtsInitListener implements TextToSpeech.OnInitListener {
         private final WeakReference<TextReader> mReaderRef;
@@ -120,6 +122,25 @@ public class TextReader implements Handler.Callback {
         }
 
         @Override
+        public void onRangeStart(final String utteranceId, final int start, final int end, final int frame) {
+            final TextReader reader = mReaderRef.get();
+            if (reader == null || reader.mIsDestroyed) return;
+
+            reader.mMainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    final TextReader r = mReaderRef.get();
+                    if (r == null || r.mIsDestroyed || r.mTextReaderOverlay == null || r.mSettingsProvider.getBanner() == 0) return;
+
+                    final String text = r.mHashMap.get(utteranceId);
+                    if (text != null) {
+                        r.mTextReaderOverlay.setText(text, start, end);
+                    }
+                }
+            });
+        }
+
+        @Override
         public void onStart(final String utteranceId) {
             final TextReader reader = mReaderRef.get();
             if (reader == null || reader.mIsDestroyed) return;
@@ -138,7 +159,7 @@ public class TextReader implements Handler.Callback {
                         final int bottom = Integer.parseInt(coordinates[3]);
 
                         final Rect rect = new Rect(left, top, right, bottom);
-                        r.mTextReaderOverlay.set(rect);
+                        r.mTextReaderOverlay.setRect(rect);
                     }
                 }
             });
@@ -260,7 +281,7 @@ public class TextReader implements Handler.Callback {
                     final String id = String.format(Locale.US, "%d:%d:%d:%d", scaledBounds.left, scaledBounds.top, scaledBounds.right, scaledBounds.bottom);
                     final String text = block.getText();
 
-                    translationManager.translate(reader.mTts, text, id);
+                    translationManager.translate(reader.mTts, reader.mHashMap, text, id);
                     if (BuildConfig.DEBUG) Log.d(TAG, "TextRecognition: text=" + text + " bounds=" + bounds + " id=" + id);
                 }
             } finally {
@@ -311,6 +332,7 @@ public class TextReader implements Handler.Callback {
         mTranslationManager = new TranslationManager(context, overlay);
         mTts = null;
         mSpeak = -1;
+        mHashMap = new HashMap<String, String>();
 
         mBackgroundThread = new HandlerThread("TextReaderBackground");
         mBackgroundThread.start();
@@ -324,6 +346,7 @@ public class TextReader implements Handler.Callback {
     private void setupTextRecognizer() {
         final int speak = mSettingsProvider.getSpeak();
         if (speak > 0) {
+            mHashMap.clear();
             mTranslationManager.prepare(mSettingsProvider.getSource(), mSettingsProvider.getDest());
         }
         if (speak == mSpeak) {

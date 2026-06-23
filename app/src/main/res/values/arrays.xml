@@ -134,4 +134,13 @@
         <item>9</item>
         <item>10</item>
     </string-array>
+
+    <string-array name="banner_entries">
+        <item>@string/entries_disabled</item>
+        <item>@string/entries_enabled</item>
+    </string-array>
+    <string-array name="banner_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
 </resources>

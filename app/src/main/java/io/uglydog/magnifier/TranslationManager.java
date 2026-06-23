@@ -35,6 +35,7 @@ import com.google.mlkit.nl.translate.Translator;
 import com.google.mlkit.nl.translate.TranslatorOptions;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Locale;
 
 public class TranslationManager {
@@ -109,10 +110,12 @@ public class TranslationManager {
         private final WeakReference<TextToSpeech> mTtsRef;
         private final String mTextId;
         private final int mTargetId;
+        private final HashMap<String, String> mHashMap;
 
-        TranslationSuccessListener(TranslationManager manager, TextToSpeech tts, String textId, int targetId) {
+        TranslationSuccessListener(TranslationManager manager, TextToSpeech tts, HashMap<String, String> hashMap, String textId, int targetId) {
             mManagerRef = new WeakReference<>(manager);
             mTtsRef = new WeakReference<>(tts);
+            mHashMap = hashMap;
             mTextId = textId;
             mTargetId = targetId;
         }
@@ -126,6 +129,7 @@ public class TranslationManager {
                     Log.d(TAG, "translate: success: " + translatedText);
                 }
                 manager.setTtsLanguage(mTargetId, tts);
+                mHashMap.put(mTextId, translatedText);
                 tts.speak(translatedText, TextToSpeech.QUEUE_ADD, null, mTextId);
             }
         }
@@ -137,10 +141,12 @@ public class TranslationManager {
         private final String mOriginalText;
         private final String mTextId;
         private final int mSourceId;
+        private final HashMap<String, String> mHashMap;
 
-        TranslationFailureListener(TranslationManager manager, TextToSpeech tts, String originalText, String textId, int sourceId) {
+        TranslationFailureListener(TranslationManager manager, TextToSpeech tts, HashMap<String, String> hashMap, String originalText, String textId, int sourceId) {
             mManagerRef = new WeakReference<>(manager);
             mTtsRef = new WeakReference<>(tts);
+            mHashMap = hashMap;
             mOriginalText = originalText;
             mTextId = textId;
             mSourceId = sourceId;
@@ -155,6 +161,7 @@ public class TranslationManager {
                     Log.d(TAG, "translate: failed: " + e.getMessage());
                 }
                 manager.setTtsLanguage(mSourceId, tts);
+                mHashMap.put(mTextId, mOriginalText);
                 tts.speak(mOriginalText, TextToSpeech.QUEUE_ADD, null, mTextId);
             }
         }
@@ -200,7 +207,6 @@ public class TranslationManager {
         mTranslator = Translation.getClient(options);
 
         final DownloadConditions conditions = new DownloadConditions.Builder()
-                .requireWifi()
                 .build();
 
         mTranslator.downloadModelIfNeeded(conditions)
@@ -208,9 +214,13 @@ public class TranslationManager {
                 .addOnFailureListener(new ModelDownloadFailureListener(this, mActiveSessionId));
     }
 
-    public synchronized void translate(@NonNull final TextToSpeech tts, @NonNull final String text, @NonNull final String id) {
+    public synchronized void translate(@NonNull final TextToSpeech tts, @NonNull final HashMap<String, String> hashMap, @NonNull final String text, @NonNull final String id) {
         if (!mIsReady || mTranslator == null) {
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "translate: not ready: " + text);
+            }
             setTtsLanguage(0, tts);
+            hashMap.put(id, text);
             tts.speak(text, TextToSpeech.QUEUE_ADD, null, id);
             return;
         }
@@ -220,8 +230,8 @@ public class TranslationManager {
         }
 
         mTranslator.translate(text)
-                .addOnSuccessListener(new TranslationSuccessListener(this, tts, id, mTargetId))
-                .addOnFailureListener(new TranslationFailureListener(this, tts, text, id, mSourceId));
+                .addOnSuccessListener(new TranslationSuccessListener(this, tts, hashMap, id, mTargetId))
+                .addOnFailureListener(new TranslationFailureListener(this, tts, hashMap, text, id, mSourceId));
     }
 
     public synchronized void close() {

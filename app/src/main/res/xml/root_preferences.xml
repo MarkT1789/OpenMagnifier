@@ -90,6 +90,14 @@
             app:title="@string/settings_dest"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/banner_entries"
+            app:entryValues="@array/banner_values"
+            app:key="banner_setting"
+            app:title="@string/settings_banner"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -127,6 +127,15 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                 onToggleMode();
             }
         });
+        mImageView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                mTextReader.stop();
+                mTextReaderOverlay.showCopyright(false);
+                mTextReaderOverlay.clearOverlay();
+                return true;
+            }
+        });
 
         if (allPermissionsGranted()) {
             startCameraSequence();
@@ -167,6 +176,9 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     protected void onDestroy() {
+        if (mTextReaderOverlay != null) {
+            mTextReaderOverlay.close();
+        }
         if (mTextReader != null) {
             mTextReader.destroy();
         }
@@ -520,6 +532,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             toggleFlashlight(true);
             mTextReader.stop();
             mTextReaderOverlay.showCopyright(false);
+            mTextReaderOverlay.clearOverlay();
             return true;
         }
 

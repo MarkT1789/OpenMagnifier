@@ -175,6 +175,10 @@ public class ShareActivity extends AppCompatActivity {
     protected void onDestroy() {
         mExecutorService.shutdown();
 
+        if (mTextReaderOverlay != null) {
+            mTextReaderOverlay.close();
+        }
+
         if (mTextReader != null) {
             mTextReader.destroy();
         }

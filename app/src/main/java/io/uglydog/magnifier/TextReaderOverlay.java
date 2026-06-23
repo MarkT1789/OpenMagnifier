@@ -23,23 +23,41 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class TextReaderOverlay extends View {
+import java.text.BreakIterator;
 
+public class TextReaderOverlay extends View implements Handler.Callback {
+
+    private static final String TAG = TextReaderOverlay.class.getSimpleName();
     private static final float STROKE_WIDTH = 11.0f;
-    private static final float TEXT_SIZE = 48.0f;
-    private static final int OFFSET = 20;
+    private static final float TEXT_SIZE = 88.0f;
+    private static final int OFFSET = 40;
+    private static final int MSG_CLEAR_OVERLAY = 1;
+    private static final int CLEAR_OVERLAY_TIMER = 1000;
+
     private final Rect mRect;
     private final Paint mBorderPaint;
     private final Paint mTextPaint;
+    private final Paint mBackgroundPaint;
     private final Handler mMainHandler;
     private final String mText;
+    private final int mBackgroundHeight;
+    private final int mTextHeight;
+    private final float[] mWidth;
+    private final BreakIterator mBreakIterator;
+
+    private String mTts;
+    private int mCount;
+    private int mStart;
 
     private boolean mShowCopyright;
+    private boolean mShowBackground;
 
     public TextReaderOverlay(@NonNull final Context context, @Nullable final AttributeSet attrs) {
         super(context, attrs);
@@ -55,19 +73,34 @@ public class TextReaderOverlay extends View {
         mTextPaint.setTextSize(TEXT_SIZE);
         mTextPaint.setAntiAlias(true);
 
+        mBackgroundPaint = new Paint();
+        mBackgroundPaint.setColor(Color.BLACK);
+        mBackgroundPaint.setStyle(Paint.Style.FILL);
+
         mText = context.getString(R.string.translate_attribution);
 
         mRect = new Rect();
-        mMainHandler = new Handler(Looper.getMainLooper());
+        mMainHandler = new Handler(Looper.getMainLooper(), this);
 
         mShowCopyright = false;
+        mShowBackground = false;
+
+        Paint.FontMetrics metrics = mTextPaint.getFontMetrics();
+        mTextHeight = (int)(metrics.descent - metrics.ascent);
+        mBackgroundHeight = mTextHeight + OFFSET * 2;
+
+        mWidth = new float[1];
+        mBreakIterator = BreakIterator.getWordInstance();
     }
 
     public void clear() {
-        set(null);
+        setRect(null);
+        setText(null, -1, -1);
+        mMainHandler.removeMessages(MSG_CLEAR_OVERLAY);
+        mMainHandler.sendEmptyMessageDelayed(MSG_CLEAR_OVERLAY, CLEAR_OVERLAY_TIMER);
     }
 
-    public void set(@Nullable final Rect rect) {
+    public void setRect(@Nullable final Rect rect) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             updateRect(rect);
         } else {
@@ -76,6 +109,19 @@ public class TextReaderOverlay extends View {
                 @Override
                 public void run() {
                     updateRect(copy);
+                }
+            });
+        }
+    }
+
+    public void setText(String text, int start, int end) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            updateText(text, start, end);
+        } else {
+            mMainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    updateText(text, start, end);
                 }
             });
         }
@@ -94,6 +140,36 @@ public class TextReaderOverlay extends View {
        invalidate();
     }
 
+    private void updateText(String text, int start, int end) {
+        if (!isAttachedToWindow()) {
+            return;
+        }
+
+        if (text != null) {
+            mShowBackground = true;
+            mMainHandler.removeMessages(MSG_CLEAR_OVERLAY);
+        }
+
+        if (text != null && mTts != null) {
+            if (mTts.equals(text)) {
+                if (mCount != 0) {
+                    int count = end - mStart;
+                    if (count > mCount) {
+                        mStart = start;
+                    }
+                }
+            } else {
+                mTts = text;
+                mStart = 0;
+            }
+        } else if (text != null || mTts != null) {
+            mTts = text;
+            mStart = 0;
+        }
+
+        invalidate();
+    }
+
     @Override
     protected void onDraw(@NonNull final Canvas canvas) {
         super.onDraw(canvas);
@@ -102,11 +178,12 @@ public class TextReaderOverlay extends View {
             canvas.drawRect(mRect, mBorderPaint);
         }
         drawCopyright(canvas);
+        drawText(canvas);
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        mMainHandler.removeCallbacksAndMessages(null);
+        close();
         super.onDetachedFromWindow();
     }
 
@@ -115,21 +192,48 @@ public class TextReaderOverlay extends View {
     }
 
     private void drawCopyright(final Canvas canvas) {
-
-        if (!mShowCopyright) {
-            return;
+        if (mShowCopyright) {
+            canvas.drawText(mText, OFFSET * 2, canvas.getHeight() - OFFSET, mTextPaint);
         }
+    }
 
-        final Rect bounds = new Rect();
-        mTextPaint.getTextBounds(mText, 0, mText.length(), bounds);
-        final int textHeight = bounds.height();
+    private void drawText(final Canvas canvas) {
+        if (mShowBackground) {
+            canvas.drawRect(0, 0, getWidth(), mBackgroundHeight, mBackgroundPaint);
+        }
+        if (mTts != null) {
+            String str = mTts.substring(mStart).replaceAll("[\\r\\n]+", " ");
 
-        final int marginLeft = OFFSET * 2;
-        final int marginBottom = OFFSET;
+            mCount = mTextPaint.breakText(str, true, getWidth() - OFFSET, mWidth);
 
-        final float x = marginLeft;
-        final float y = canvas.getHeight() - marginBottom - bounds.bottom;
+            mBreakIterator.setText(str);
+            int lastBoundary = mBreakIterator.preceding(mCount);
+            if (lastBoundary != 0) {
+                mCount = lastBoundary;
+            }
 
-        canvas.drawText(mText, x, y, mTextPaint);
+            canvas.drawText(str, 0, mCount, OFFSET, mBackgroundHeight - OFFSET, mTextPaint);
+        }
+    }
+
+    @Override
+    public boolean handleMessage(@NonNull final Message msg) {
+        switch (msg.what) {
+            case MSG_CLEAR_OVERLAY:
+                clearOverlay();
+                return true;
+        }
+        return false;
+    }
+
+    public void close() {
+        mMainHandler.removeCallbacksAndMessages(null);
+    }
+
+    public void clearOverlay() {
+        mShowBackground = false;
+        setRect(null);
+        setText(null, -1, -1);
+        invalidate();
     }
 }
