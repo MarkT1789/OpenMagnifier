@@ -38,8 +38,8 @@ public class TextReaderOverlay extends View implements Handler.Callback {
     private static final float STROKE_WIDTH = 11.0f;
     private static final float TEXT_SIZE = 88.0f;
     private static final int OFFSET = 40;
-    private static final int MSG_CLEAR_OVERLAY = 1;
-    private static final int CLEAR_OVERLAY_TIMER = 1000;
+    private static final int MSG_CLEAR_BACKGROUND = 1;
+    private static final int CLEAR_BACKGROUND_TIMER = 1000;
 
     private final Rect mRect;
     private final Paint mBorderPaint;
@@ -96,8 +96,8 @@ public class TextReaderOverlay extends View implements Handler.Callback {
     public void clear() {
         setRect(null);
         setText(null, -1, -1);
-        mMainHandler.removeMessages(MSG_CLEAR_OVERLAY);
-        mMainHandler.sendEmptyMessageDelayed(MSG_CLEAR_OVERLAY, CLEAR_OVERLAY_TIMER);
+        mMainHandler.removeMessages(MSG_CLEAR_BACKGROUND);
+        mMainHandler.sendEmptyMessageDelayed(MSG_CLEAR_BACKGROUND, CLEAR_BACKGROUND_TIMER);
     }
 
     public void setRect(@Nullable final Rect rect) {
@@ -147,7 +147,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
 
         if (text != null) {
             mShowBackground = true;
-            mMainHandler.removeMessages(MSG_CLEAR_OVERLAY);
+            mMainHandler.removeMessages(MSG_CLEAR_BACKGROUND);
         }
 
         if (text != null && mTts != null) {
@@ -219,8 +219,11 @@ public class TextReaderOverlay extends View implements Handler.Callback {
     @Override
     public boolean handleMessage(@NonNull final Message msg) {
         switch (msg.what) {
-            case MSG_CLEAR_OVERLAY:
-                clearOverlay();
+            case MSG_CLEAR_BACKGROUND:
+                if (mShowBackground) {
+                    mShowBackground = false;
+                    invalidate();
+                }
                 return true;
         }
         return false;
