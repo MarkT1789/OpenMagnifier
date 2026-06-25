@@ -130,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mImageView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
+                if (BuildConfig.DEBUG) Log.d(TAG, "onLongClick");
                 mTextReader.stop();
                 mTextReaderOverlay.showCopyright(false);
                 mTextReaderOverlay.clearOverlay();

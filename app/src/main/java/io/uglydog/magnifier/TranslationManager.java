@@ -45,6 +45,7 @@ public class TranslationManager {
     @Nullable
     private Translator mTranslator;
     private boolean mIsReady;
+    private boolean mIsDownloading;
     private int mSourceId;
     private int mTargetId;
     private int mTtsId;
@@ -76,6 +77,10 @@ public class TranslationManager {
                     if (manager.mActiveSessionId == mSessionId) {
                         Log.i(TAG, "prepare: models are downloaded and ready");
                         manager.mIsReady = true;
+                        if (manager.mIsDownloading) {
+                            ToastHelper.show(manager.mContext, manager.mContext.getString(R.string.toast_translation_downloaded));
+                            manager.mIsDownloading = false;
+                        }
                     }
                 }
             }
@@ -197,6 +202,7 @@ public class TranslationManager {
         mSourceId = sourceId;
         mTargetId = targetId;
         mIsReady = false;
+        mIsDownloading = false;
         mActiveSessionId++;
 
         final TranslatorOptions options = new TranslatorOptions.Builder()
@@ -221,6 +227,10 @@ public class TranslationManager {
             }
             setTtsLanguage(0, tts);
             hashMap.put(id, text);
+            if (!mIsReady && mTranslator != null) {
+                ToastHelper.show(mContext, mContext.getString(R.string.toast_translation_downloading));
+                mIsDownloading = true;
+            }
             tts.speak(text, TextToSpeech.QUEUE_ADD, null, id);
             return;
         }
@@ -244,6 +254,7 @@ public class TranslationManager {
     private void reset() {
         mTranslator = null;
         mIsReady = false;
+        mIsDownloading = false;
         mSourceId = -1;
         mTargetId = -1;
         mTtsId = -1;
