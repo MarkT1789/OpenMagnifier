@@ -17,6 +17,7 @@
 package io.uglydog.magnifier;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -26,6 +27,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,10 +38,10 @@ public class TextReaderOverlay extends View implements Handler.Callback {
 
     private static final String TAG = TextReaderOverlay.class.getSimpleName();
     private static final float STROKE_WIDTH = 11.0f;
-    private static final float TEXT_SIZE = 88.0f;
+    private static final float TEXT_SIZE = 18.0f;
     private static final int OFFSET = 40;
     private static final int MSG_CLEAR_BACKGROUND = 1;
-    private static final int CLEAR_BACKGROUND_TIMER = 1000;
+    private static final int CLEAR_BACKGROUND_TIMER = 2000;
 
     private final Rect mRect;
     private final Paint mBorderPaint;
@@ -47,10 +49,10 @@ public class TextReaderOverlay extends View implements Handler.Callback {
     private final Paint mBackgroundPaint;
     private final Handler mMainHandler;
     private final String mText;
-    private final int mBackgroundHeight;
-    private final int mTextHeight;
     private final float[] mWidth;
     private final BreakIterator mBreakIterator;
+
+    private int mBackgroundHeight;
 
     private String mTts;
     private int mCount;
@@ -70,7 +72,6 @@ public class TextReaderOverlay extends View implements Handler.Callback {
 
         mTextPaint = new Paint();
         mTextPaint.setColor(Color.WHITE);
-        mTextPaint.setTextSize(TEXT_SIZE);
         mTextPaint.setAntiAlias(true);
 
         mBackgroundPaint = new Paint();
@@ -85,12 +86,11 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         mShowCopyright = false;
         mShowBackground = false;
 
-        Paint.FontMetrics metrics = mTextPaint.getFontMetrics();
-        mTextHeight = (int)(metrics.descent - metrics.ascent);
-        mBackgroundHeight = mTextHeight + OFFSET * 2;
 
         mWidth = new float[1];
         mBreakIterator = BreakIterator.getWordInstance();
+
+        updateTextSize();
     }
 
     public void clear() {
@@ -238,5 +238,25 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         setRect(null);
         setText(null, -1, -1);
         invalidate();
+    }
+
+    @Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        updateTextSize();
+        invalidate();
+    }
+
+    private void updateTextSize() {
+        final float pxSize = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_SP,
+                TEXT_SIZE,
+                getContext().getResources().getDisplayMetrics()
+        );
+        mTextPaint.setTextSize(pxSize * 1.3f);
+
+        final Paint.FontMetrics metrics = mTextPaint.getFontMetrics();
+        final int textHeight = (int)(metrics.descent - metrics.ascent);
+        mBackgroundHeight = textHeight + OFFSET * 2;
     }
 }
