@@ -406,9 +406,6 @@ public class TextReader implements Handler.Callback {
         if (BuildConfig.DEBUG) Log.d(TAG, "stop");
         mMainHandler.removeMessages(MSG_SPEAK);
         mBackgroundHandler.removeCallbacksAndMessages(null);
-        if (mTextReaderOverlay != null) {
-            mTextReaderOverlay.clear();
-        }
         if (mTextRecognizer != null) {
             mTextRecognizer.close();
             mTextRecognizer = null;
@@ -419,6 +416,9 @@ public class TextReader implements Handler.Callback {
         }
         if (mTtsReady && !mIsDestroyed) {
             mTts.stop();
+        }
+        if (mTextReaderOverlay != null) {
+            mTextReaderOverlay.clear();
         }
     }
 
