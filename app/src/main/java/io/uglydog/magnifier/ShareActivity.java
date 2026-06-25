@@ -87,6 +87,15 @@ public class ShareActivity extends AppCompatActivity {
             }
         });
         mImageView.setMinimumTileDpi(120);
+        mImageView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                mTextReader.stop();
+                mTextReaderOverlay.showCopyright(false);
+                mTextReaderOverlay.clearOverlay();
+                return true;
+            }
+        });
 
         mSettingsProvider = new SettingsProvider(this);
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
