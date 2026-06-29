@@ -279,7 +279,7 @@ public class TextReader implements Handler.Callback {
                     );
 
                     final String id = String.format(Locale.US, "%d:%d:%d:%d", scaledBounds.left, scaledBounds.top, scaledBounds.right, scaledBounds.bottom);
-                    final String text = block.getText();
+                    final String text = block.getText().replaceAll("[\\r\\n]+", " ");
 
                     translationManager.translate(reader.mTts, reader.mHashMap, text, id);
                     if (BuildConfig.DEBUG) Log.d(TAG, "TextRecognition: text=" + text + " bounds=" + bounds + " id=" + id);

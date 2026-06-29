@@ -202,14 +202,18 @@ public class TextReaderOverlay extends View implements Handler.Callback {
             canvas.drawRect(0, 0, getWidth(), mBackgroundHeight, mBackgroundPaint);
         }
         if (mTts != null) {
-            String str = mTts.substring(mStart).replaceAll("[\\r\\n]+", " ");
+            final String str = mTts.substring(mStart);
 
             mCount = mTextPaint.breakText(str, true, getWidth() - OFFSET, mWidth);
 
-            mBreakIterator.setText(str);
-            int lastBoundary = mBreakIterator.preceding(mCount);
-            if (lastBoundary != 0) {
-                mCount = lastBoundary;
+            if (mCount != str.length()) {
+                mBreakIterator.setText(str);
+                if (!mBreakIterator.isBoundary(mCount)) {
+                    final int precedingBoundary = mBreakIterator.preceding(mCount);
+                    if (precedingBoundary != 0 && precedingBoundary != BreakIterator.DONE) {
+                        mCount = precedingBoundary;
+                    }
+                }
             }
 
             canvas.drawText(str, 0, mCount, OFFSET, mBackgroundHeight - OFFSET, mTextPaint);
