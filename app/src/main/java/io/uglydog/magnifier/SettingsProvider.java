@@ -40,10 +40,11 @@ public class SettingsProvider {
     private static final String KEY_SOURCE = "source_setting";
     private static final String KEY_DEST = "dest_setting";
     private static final String KEY_BANNER = "banner_setting";
+    private static final String KEY_VOLUME = "volume_setting";
 
     private final SharedPreferences mPrefs;
     private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight;
-    private int mRotation, mColor, mSpeak, mSource, mDest,mBanner;
+    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume;
     private String mSplashVersion;
 
     public SettingsProvider(@NonNull final Context context) {
@@ -65,6 +66,7 @@ public class SettingsProvider {
         mSource = getInt(KEY_SOURCE, 0);
         mDest = getInt(KEY_DEST, 0);
         mBanner = getInt(KEY_BANNER, 0);
+        mVolume = getInt(KEY_VOLUME, 0);
     }
 
     public synchronized float getBrightness() {
@@ -184,6 +186,14 @@ public class SettingsProvider {
         setInt(KEY_BANNER, banner);
     }
 
+    public synchronized int getVolume() {
+        return mVolume;
+    }
+
+    public synchronized void setVolume(final int volume) {
+        mVolume = volume;
+        setInt(KEY_VOLUME, volume);
+    }
     /***************************************************/
 
     private String getString(@NonNull final String key, @NonNull final String defaultValue) {

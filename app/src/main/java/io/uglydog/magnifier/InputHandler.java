@@ -36,6 +36,7 @@ public class InputHandler {
         void onChangeView();
         void onChangeZoomSetting(KeyEvent event);
         void onScrollViewport(KeyEvent event);
+        boolean onVolumeChanged(KeyEvent event);
         void onShowHelp();
         void onShowVersion();
     }
@@ -104,6 +105,12 @@ public class InputHandler {
                 if (isKeyDown)
                     actions.onScrollViewport(event);
                 return true;
+
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                if (isKeyDown)
+                    return actions.onVolumeChanged(event);
+                return false;
         }
         return false;
     }

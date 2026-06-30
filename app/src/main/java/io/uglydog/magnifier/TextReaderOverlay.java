@@ -154,7 +154,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
             if (mTts.equals(text)) {
                 if (mCount != 0) {
                     int count = end - mStart;
-                    if (count > mCount) {
+                    if (count > mCount || start < mStart) {
                         mStart = start;
                     }
                 }

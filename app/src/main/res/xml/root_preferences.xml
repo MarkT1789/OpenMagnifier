@@ -98,6 +98,14 @@
             app:title="@string/settings_banner"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/volume_entries"
+            app:entryValues="@array/volume_values"
+            app:key="volume_setting"
+            app:title="@string/settings_volume"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

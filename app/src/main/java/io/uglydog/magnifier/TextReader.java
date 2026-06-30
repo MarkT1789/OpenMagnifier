@@ -26,6 +26,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
@@ -51,6 +52,7 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import java.io.File;
 import java.io.FileInputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -84,6 +86,8 @@ public class TextReader implements Handler.Callback {
     private Task<Text> mActiveRecognitionTask = null;
     private int mSpeak;
     private final HashMap<String, String> mHashMap;
+    private final ArrayList<String> mArrayList;
+    private long mLastVolumeUp;
 
     private static class TtsInitListener implements TextToSpeech.OnInitListener {
         private final WeakReference<TextReader> mReaderRef;
@@ -161,6 +165,7 @@ public class TextReader implements Handler.Callback {
                         final Rect rect = new Rect(left, top, right, bottom);
                         r.mTextReaderOverlay.setRect(rect);
                     }
+                    r.mHashMap.put("current", utteranceId);
                 }
             });
         }
@@ -281,7 +286,7 @@ public class TextReader implements Handler.Callback {
                     final String id = String.format(Locale.US, "%d:%d:%d:%d", scaledBounds.left, scaledBounds.top, scaledBounds.right, scaledBounds.bottom);
                     final String text = block.getText().replaceAll("[\\r\\n]+", " ");
 
-                    translationManager.translate(reader.mTts, reader.mHashMap, text, id);
+                    translationManager.translate(reader.mTts, reader.mHashMap, reader.mArrayList, text, id);
                     if (BuildConfig.DEBUG) Log.d(TAG, "TextRecognition: text=" + text + " bounds=" + bounds + " id=" + id);
                 }
             } finally {
@@ -333,6 +338,7 @@ public class TextReader implements Handler.Callback {
         mTts = null;
         mSpeak = -1;
         mHashMap = new HashMap<String, String>();
+        mArrayList = new ArrayList<String>();
 
         mBackgroundThread = new HandlerThread("TextReaderBackground");
         mBackgroundThread.start();
@@ -347,6 +353,7 @@ public class TextReader implements Handler.Callback {
         final int speak = mSettingsProvider.getSpeak();
         if (speak > 0) {
             mHashMap.clear();
+            mArrayList.clear();
             mTranslationManager.prepare(mSettingsProvider.getSource(), mSettingsProvider.getDest());
         }
         if (speak == mSpeak) {
@@ -534,6 +541,42 @@ public class TextReader implements Handler.Callback {
                 bitmap.recycle();
             }
         }
+    }
+
+    public boolean onVolumeChanged(final int cmd) {
+        if (mSettingsProvider.getVolume() == 0 || mSettingsProvider.getSpeak() == 0) return false;
+
+        final String currentId = mHashMap.get("current");
+        if (currentId == null) return false;
+
+        int index = mArrayList.indexOf(currentId);
+        if (index == -1) return false;
+
+        mTts.stop();
+
+        switch(cmd) {
+            case 0:
+                final long time = SystemClock.uptimeMillis();
+                final long delay = time - mLastVolumeUp;
+                if (delay > 0 && delay < 1000 && index > 0) {
+                    index--;
+                }
+                mLastVolumeUp = time;
+            break;
+            case 1:
+                index++;
+                if (index == mArrayList.size()) {
+                    mTextReaderOverlay.clear();
+                    return true;
+                }
+            break;
+        }
+
+        final String utteranceId = mArrayList.get(index);
+        final String utterance = mHashMap.get(utteranceId);
+        mTts.speak(utterance, TextToSpeech.QUEUE_ADD, null, utteranceId);
+
+        return true;
     }
 
     public void destroy() {

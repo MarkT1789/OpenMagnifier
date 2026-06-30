@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 
@@ -46,7 +47,7 @@ import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ShareActivity extends AppCompatActivity {
+public class ShareActivity extends AppCompatActivity implements InputHandler.InputActions {
 
     private static final String TAG = ShareActivity.class.getSimpleName();
     private static final String FILE = "shared_image.jpg";
@@ -300,4 +301,53 @@ public class ShareActivity extends AppCompatActivity {
         }
         return success;
     }
+
+    @Override
+    public boolean onKeyDown(final int keyCode, @NonNull final KeyEvent event) {
+        if (InputHandler.handleKey(event, this)) {
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(final int keyCode, @NonNull final KeyEvent event) {
+        if (InputHandler.handleKey(event, this)) {
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
+    public void onChangeBrightnessSetting(KeyEvent event) {}
+    @Override
+    public void onChangeColorFilterSetting(KeyEvent event) {}
+    @Override
+    public void onChangeContrastSetting(KeyEvent event) {}
+    @Override
+    public void onChangeFlashlightSetting(KeyEvent event) {}
+    @Override
+    public void onChangeSpeakSetting(KeyEvent event) {}
+    @Override
+    public void onChangePanSetting(KeyEvent event) {}
+    @Override
+    public void onChangeRotationSetting(KeyEvent event) {}
+    @Override
+    public void onChangeView() {}
+    @Override
+    public void onChangeZoomSetting(KeyEvent event) {}
+    @Override
+    public void onScrollViewport(KeyEvent event) {}
+    @Override
+    public boolean onVolumeChanged(KeyEvent event) {
+        if (mImageView.getVisibility() != View.VISIBLE || mTextReader == null) {
+            return false;
+        }
+        final int cmd = event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP ? 0 : 1;
+        return mTextReader.onVolumeChanged(cmd);
+    }
+    @Override
+    public void onShowHelp() {}
+    @Override
+    public void onShowVersion() {}
 }

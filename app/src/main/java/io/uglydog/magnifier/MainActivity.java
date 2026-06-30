@@ -470,6 +470,15 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     }
 
     @Override
+    public boolean onVolumeChanged(KeyEvent event) {
+        if (mImageView.getVisibility() != View.VISIBLE) {
+            return false;
+        }
+        final int cmd = event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP ? 0 : 1;
+        return mTextReader.onVolumeChanged(cmd);
+    }
+
+    @Override
     public void onShowHelp() {
         showSplashDialog(true);
     }
