@@ -312,6 +312,8 @@ public class TranslationManager {
             case 8:  return TranslateLanguage.MARATHI;
             case 9:  return TranslateLanguage.PORTUGUESE;
             case 10: return TranslateLanguage.SPANISH;
+            case 11: return TranslateLanguage.TAGALOG;
+            case 12: return TranslateLanguage.VIETNAMESE;
             default:
                 Log.e(TAG, "getTranslationString: error: " + index);
                 return null;
@@ -332,6 +334,8 @@ public class TranslationManager {
             case 8:  return new Locale("mr", "IN");
             case 9:  return new Locale("pt");
             case 10: return new Locale("es");
+            case 11: return new Locale("fil", "PH");
+            case 12: return new Locale("vi", "VN");
             default:
                 Log.e(TAG, "getTtsLocale: error: " + index);
                 return null;
