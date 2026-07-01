@@ -41,9 +41,10 @@ public class SettingsProvider {
     private static final String KEY_DEST = "dest_setting";
     private static final String KEY_BANNER = "banner_setting";
     private static final String KEY_VOLUME = "volume_setting";
+    private static final String KEY_BANNER_SIZE = "banner_size_setting";
 
     private final SharedPreferences mPrefs;
-    private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight;
+    private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight, mBannerSize;
     private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume;
     private String mSplashVersion;
 
@@ -67,6 +68,7 @@ public class SettingsProvider {
         mDest = getInt(KEY_DEST, 0);
         mBanner = getInt(KEY_BANNER, 0);
         mVolume = getInt(KEY_VOLUME, 0);
+        mBannerSize = getFloat(KEY_BANNER_SIZE, 1.0f);
     }
 
     public synchronized float getBrightness() {
@@ -193,6 +195,15 @@ public class SettingsProvider {
     public synchronized void setVolume(final int volume) {
         mVolume = volume;
         setInt(KEY_VOLUME, volume);
+    }
+
+    public synchronized float getBannerSize() {
+        return mBannerSize;
+    }
+
+    public synchronized void setBannerSize(final float bannerSize) {
+        mBannerSize = bannerSize;
+        setFloat(KEY_BANNER_SIZE, bannerSize);
     }
     /***************************************************/
 

@@ -425,7 +425,7 @@ public class TextReader implements Handler.Callback {
             mTts.stop();
         }
         if (mTextReaderOverlay != null) {
-            mTextReaderOverlay.clear();
+            mTextReaderOverlay.clearOverlay();
         }
     }
 

@@ -100,6 +100,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
 
         mSettingsProvider = new SettingsProvider(this);
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
+        mTextReaderOverlay.setSettingsProvider(mSettingsProvider);
         if (mTextReaderOverlay == null) {
             Log.e(TAG, "onCreate: no text overlay view");
             finish();

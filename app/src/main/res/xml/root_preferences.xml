@@ -99,6 +99,14 @@
             app:useSimpleSummaryProvider="true" />
 
         <ListPreference
+            app:defaultValue="1.0"
+            app:entries="@array/banner_size_entries"
+            app:entryValues="@array/banner_size_values"
+            app:key="banner_size_setting"
+            app:title="@string/settings_banner_size"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
             app:defaultValue="0"
             app:entries="@array/volume_entries"
             app:entryValues="@array/volume_values"

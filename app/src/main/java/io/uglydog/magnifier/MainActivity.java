@@ -115,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mGestureDetector = new GestureDetector(this, new GestureListener(this));
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener(this));
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
+        mTextReaderOverlay.setSettingsProvider(mSettingsProvider);
         mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsProvider);
 
         showSplashDialog(false);
@@ -159,6 +160,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
         mSettingsProvider.reload();
         mTextReader.start();
+        mTextReaderOverlay.updateTextSize();
 
         if (mImageView.getVisibility() == View.VISIBLE) {
             mImageView.setOrientation(mSettingsProvider.getRotation());

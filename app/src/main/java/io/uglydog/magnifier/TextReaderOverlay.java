@@ -38,7 +38,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
 
     private static final String TAG = TextReaderOverlay.class.getSimpleName();
     private static final float STROKE_WIDTH = 11.0f;
-    private static final float TEXT_SIZE = 18.0f;
+    private static final float TEXT_SIZE = 23.0f;
     private static final int OFFSET = 40;
     private static final int MSG_CLEAR_BACKGROUND = 1;
     private static final int CLEAR_BACKGROUND_TIMER = 2000;
@@ -46,11 +46,14 @@ public class TextReaderOverlay extends View implements Handler.Callback {
     private final Rect mRect;
     private final Paint mBorderPaint;
     private final Paint mTextPaint;
+    private final Paint mCopyrightPaint;
     private final Paint mBackgroundPaint;
     private final Handler mMainHandler;
     private final String mText;
     private final float[] mWidth;
     private final BreakIterator mBreakIterator;
+
+    private SettingsProvider mSettingsProvider;
 
     private int mBackgroundHeight;
 
@@ -74,6 +77,11 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         mTextPaint.setColor(Color.WHITE);
         mTextPaint.setAntiAlias(true);
 
+        mCopyrightPaint = new Paint();
+        mCopyrightPaint.setColor(Color.WHITE);
+        mCopyrightPaint.setAntiAlias(true);
+        mCopyrightPaint.setTextSize(64f);
+
         mBackgroundPaint = new Paint();
         mBackgroundPaint.setColor(Color.BLACK);
         mBackgroundPaint.setStyle(Paint.Style.FILL);
@@ -93,11 +101,17 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         updateTextSize();
     }
 
+    public void setSettingsProvider(SettingsProvider settingsProvider) {
+        mSettingsProvider = settingsProvider;
+        updateTextSize();
+    }
+
     public void clear() {
         setRect(null);
         setText(null, -1, -1);
-        mMainHandler.removeMessages(MSG_CLEAR_BACKGROUND);
-        mMainHandler.sendEmptyMessageDelayed(MSG_CLEAR_BACKGROUND, CLEAR_BACKGROUND_TIMER);
+        if (!mMainHandler.hasMessages(MSG_CLEAR_BACKGROUND)) {
+            mMainHandler.sendEmptyMessageDelayed(MSG_CLEAR_BACKGROUND, CLEAR_BACKGROUND_TIMER);
+        }
     }
 
     public void setRect(@Nullable final Rect rect) {
@@ -193,7 +207,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
 
     private void drawCopyright(final Canvas canvas) {
         if (mShowCopyright) {
-            canvas.drawText(mText, OFFSET * 2, canvas.getHeight() - OFFSET, mTextPaint);
+            canvas.drawText(mText, OFFSET * 2, canvas.getHeight() - OFFSET, mCopyrightPaint);
         }
     }
 
@@ -251,13 +265,14 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         invalidate();
     }
 
-    private void updateTextSize() {
+    public void updateTextSize() {
+        final float banner_size = mSettingsProvider != null ? mSettingsProvider.getBannerSize() : 1.0f;
         final float pxSize = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_SP,
-                TEXT_SIZE,
+                TEXT_SIZE * banner_size,
                 getContext().getResources().getDisplayMetrics()
         );
-        mTextPaint.setTextSize(pxSize * 1.3f);
+        mTextPaint.setTextSize(pxSize);
 
         final Paint.FontMetrics metrics = mTextPaint.getFontMetrics();
         final int textHeight = (int)(metrics.descent - metrics.ascent);
