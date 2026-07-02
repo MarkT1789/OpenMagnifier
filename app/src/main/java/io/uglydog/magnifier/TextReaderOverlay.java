@@ -25,18 +25,18 @@ import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.text.BreakIterator;
-
 public class TextReaderOverlay extends View implements Handler.Callback {
 
-    private static final String TAG = TextReaderOverlay.class.getSimpleName();
     private static final float STROKE_WIDTH = 11.0f;
     private static final float TEXT_SIZE = 23.0f;
     private static final int OFFSET = 40;
@@ -50,8 +50,6 @@ public class TextReaderOverlay extends View implements Handler.Callback {
     private final Paint mBackgroundPaint;
     private final Handler mMainHandler;
     private final String mText;
-    private final float[] mWidth;
-    private final BreakIterator mBreakIterator;
 
     private SettingsProvider mSettingsProvider;
 
@@ -93,10 +91,6 @@ public class TextReaderOverlay extends View implements Handler.Callback {
 
         mShowCopyright = false;
         mShowBackground = false;
-
-
-        mWidth = new float[1];
-        mBreakIterator = BreakIterator.getWordInstance();
 
         updateTextSize();
     }
@@ -217,20 +211,30 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         }
         if (mTts != null) {
             final String str = mTts.substring(mStart);
+            final int width = canvas.getWidth() - OFFSET * 2;
 
-            mCount = mTextPaint.breakText(str, true, getWidth() - OFFSET, mWidth);
+            final TextPaint textPaint = new TextPaint();
+            textPaint.set(mTextPaint);
+            StaticLayout staticLayout = StaticLayout.Builder.obtain(str, 0, str.length(), textPaint, width)
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .setLineSpacing(0.0f, 1.0f)
+                .setMaxLines(1)
+                .setIncludePad(false)
+                .build();
 
-            if (mCount != str.length()) {
-                mBreakIterator.setText(str);
-                if (!mBreakIterator.isBoundary(mCount)) {
-                    final int precedingBoundary = mBreakIterator.preceding(mCount);
-                    if (precedingBoundary != 0 && precedingBoundary != BreakIterator.DONE) {
-                        mCount = precedingBoundary;
-                    }
-                }
+            mCount = staticLayout.getLineEnd(0);
+
+            canvas.save();
+            int textDirection = staticLayout.getParagraphDirection(0);
+            if (textDirection == Layout.DIR_RIGHT_TO_LEFT) {
+                float rtlTranslateX = canvas.getWidth() - width - OFFSET;
+                canvas.translate(rtlTranslateX, OFFSET);
+            } else {
+                canvas.translate(OFFSET, OFFSET);
             }
-
-            canvas.drawText(str, 0, mCount, OFFSET, mBackgroundHeight - OFFSET, mTextPaint);
+            canvas.clipRect(0, mTextPaint.ascent(), width, staticLayout.getLineBottom(0));
+            staticLayout.draw(canvas);
+            canvas.restore();
         }
     }
 
