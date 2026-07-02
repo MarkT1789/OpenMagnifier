@@ -76,16 +76,16 @@
 
         <ListPreference
             app:defaultValue="0"
-            app:entries="@array/lang_entries"
-            app:entryValues="@array/lang_values"
+            app:entries="@array/source_entries"
+            app:entryValues="@array/source_values"
             app:key="source_setting"
             app:title="@string/settings_source"
             app:useSimpleSummaryProvider="true" />
 
         <ListPreference
             app:defaultValue="0"
-            app:entries="@array/lang_entries"
-            app:entryValues="@array/lang_values"
+            app:entries="@array/dest_entries"
+            app:entryValues="@array/dest_values"
             app:key="dest_setting"
             app:title="@string/settings_dest"
             app:useSimpleSummaryProvider="true" />

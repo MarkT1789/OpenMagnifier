@@ -108,7 +108,7 @@
         <item>4</item>
     </string-array>
 
-    <string-array name="lang_entries">
+    <string-array name="source_entries">
         <item>@string/entries_disabled</item>
         <item>@string/entries_bengali</item>
         <item>@string/entries_chinese</item>
@@ -123,7 +123,7 @@
         <item>@string/entries_tagalog</item>
         <item>@string/entries_vietnamese</item>
     </string-array>
-    <string-array name="lang_values">
+    <string-array name="source_values">
         <item>0</item>
         <item>1</item>
         <item>2</item>
@@ -136,6 +136,41 @@
         <item>9</item>
         <item>10</item>
         <item>11</item>
+        <item>12</item>
+    </string-array>
+
+    <string-array name="dest_entries">
+        <item>@string/entries_disabled</item>
+        <item>@string/entries_arabic</item>
+        <item>@string/entries_bengali</item>
+        <item>@string/entries_chinese</item>
+        <item>@string/entries_english</item>
+        <item>@string/entries_french</item>
+        <item>@string/entries_hindi</item>
+        <item>@string/entries_indonesian</item>
+        <item>@string/entries_japanese</item>
+        <item>@string/entries_marathi</item>
+        <item>@string/entries_portuguese</item>
+        <item>@string/entries_spanish</item>
+        <item>@string/entries_tagalog</item>
+        <item>@string/entries_urdu</item>
+        <item>@string/entries_vietnamese</item>
+    </string-array>
+    <string-array name="dest_values">
+        <item>0</item>
+        <item>13</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>14</item>
         <item>12</item>
     </string-array>
 
