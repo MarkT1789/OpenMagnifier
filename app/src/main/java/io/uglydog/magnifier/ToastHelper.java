@@ -44,4 +44,16 @@ public class ToastHelper {
             }
         });
     }
+
+    public static void cancel() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mHandler.removeCallbacksAndMessages(null);
+                if (mToast != null) {
+                    mToast.cancel();
+                }
+            }
+        });
+    }
 }

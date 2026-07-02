@@ -151,6 +151,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         super.onPause();
         if (BuildConfig.DEBUG) Log.d(TAG, "onPause");
         mTextReader.stop();
+        ToastHelper.cancel();
     }
 
     @Override
