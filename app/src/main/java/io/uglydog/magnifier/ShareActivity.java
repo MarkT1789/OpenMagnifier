@@ -53,7 +53,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     private static final String FILE = "shared_image.jpg";
 
     private SubsamplingScaleImageView mImageView;
-    private SettingsProvider mSettingsProvider;
+    private SettingsManager mSettingsManager;
     private TextReader mTextReader;
     private TextReaderOverlay mTextReaderOverlay;
     private ToastManager mToastManager;
@@ -100,9 +100,9 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
             }
         });
 
-        mSettingsProvider = new SettingsProvider(this);
+        mSettingsManager = new SettingsManager(this);
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
-        mTextReaderOverlay.setSettingsProvider(mSettingsProvider);
+        mTextReaderOverlay.setSettingsManager(mSettingsManager);
         if (mTextReaderOverlay == null) {
             Log.e(TAG, "onCreate: no text overlay view");
             finish();
@@ -175,8 +175,8 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
             return;
         }
 
-        if (mSettingsProvider != null) {
-            mSettingsProvider.reload();
+        if (mSettingsManager != null) {
+            mSettingsManager.reload();
         }
 
         if (mTextReader != null) {
@@ -236,7 +236,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
                         if (isFinishing() || isDestroyed()) return;
 
                         if (success) {
-                            mTextReader = new TextReader(ShareActivity.this, mImageView, mTextReaderOverlay, FILE, mSettingsProvider, mToastManager);
+                            mTextReader = new TextReader(ShareActivity.this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, mToastManager);
                             mImageView.setImage(ImageSource.uri(Uri.fromFile(new File(getCacheDir(), FILE))));
                             mTextReader.start();
                         } else {

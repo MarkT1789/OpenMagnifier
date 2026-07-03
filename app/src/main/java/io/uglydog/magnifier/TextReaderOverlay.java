@@ -51,7 +51,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
     private final Handler mMainHandler;
     private final String mText;
 
-    private SettingsProvider mSettingsProvider;
+    private SettingsManager mSettingsManager;
 
     private int mBackgroundHeight;
 
@@ -95,8 +95,8 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         updateTextSize();
     }
 
-    public void setSettingsProvider(SettingsProvider settingsProvider) {
-        mSettingsProvider = settingsProvider;
+    public void setSettingsManager(SettingsManager settingsManager) {
+        mSettingsManager = settingsManager;
         updateTextSize();
     }
 
@@ -270,7 +270,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
     }
 
     public void updateTextSize() {
-        final float banner_size = mSettingsProvider != null ? mSettingsProvider.getBannerSize() : 1.0f;
+        final float banner_size = mSettingsManager != null ? mSettingsManager.getBannerSize() : 1.0f;
         final float pxSize = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_SP,
                 TEXT_SIZE * banner_size,

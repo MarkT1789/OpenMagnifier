@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     private static final int CAMERA_PERMISSION_CODE = 100;
 
     private CameraManager mCameraManager;
-    private SettingsProvider mSettingsProvider;
+    private SettingsManager mSettingsManager;
     private SubsamplingScaleImageView mImageView;
     private GestureDetector mGestureDetector;
     private ScaleGestureDetector mScaleGestureDetector;
@@ -112,13 +112,13 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mImageView = findViewById(R.id.ivLastCapture);
         mImageView.setMinimumScaleType(SubsamplingScaleImageView.SCALE_TYPE_CENTER_CROP);
 
-        mSettingsProvider = new SettingsProvider(this);
+        mSettingsManager = new SettingsManager(this);
         mCameraManager = new CameraManager(this, findViewById(R.id.viewFinder));
         mGestureDetector = new GestureDetector(this, new GestureListener(this));
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener(this));
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
-        mTextReaderOverlay.setSettingsProvider(mSettingsProvider);
-        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsProvider, mToastManager);
+        mTextReaderOverlay.setSettingsManager(mSettingsManager);
+        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, mToastManager);
 
         showSplashDialog(false);
         updateFilters();
@@ -161,19 +161,19 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         super.onResume();
         if (BuildConfig.DEBUG) Log.d(TAG, "onResume");
 
-        mSettingsProvider.reload();
+        mSettingsManager.reload();
         mTextReader.start();
         mTextReaderOverlay.updateTextSize();
 
         if (mImageView.getVisibility() == View.VISIBLE) {
-            mImageView.setOrientation(mSettingsProvider.getRotation());
+            mImageView.setOrientation(mSettingsManager.getRotation());
         } else {
             toggleFlashlight(true);
         }
 
         final Camera camera = mCameraManager.getCamera();
         if (camera != null) {
-            final float savedZoom = mSettingsProvider.getZoom();
+            final float savedZoom = mSettingsManager.getZoom();
             camera.getCameraControl().setZoomRatio(savedZoom);
         }
 
@@ -248,10 +248,10 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     @Override
     public void onChangeBrightnessSetting(@NonNull final KeyEvent event) {
         if (mImageView.getVisibility() == View.VISIBLE) {
-            final int id = getNextString(R.array.brightness_values, String.valueOf(mSettingsProvider.getBrightness()), !event.isShiftPressed());
+            final int id = getNextString(R.array.brightness_values, String.valueOf(mSettingsManager.getBrightness()), !event.isShiftPressed());
             final String value = getStringItem(R.array.brightness_values, id);
             final String key = getStringItem(R.array.filter_entries, id);
-            mSettingsProvider.setBrightness(Float.parseFloat(value));
+            mSettingsManager.setBrightness(Float.parseFloat(value));
             mToastManager.show(this, getString(R.string.toast_brightness, key));
             updateFilters();
         } else {
@@ -262,10 +262,10 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     @Override
     public void onChangeColorFilterSetting(@NonNull final KeyEvent event) {
         if (mImageView.getVisibility() == View.VISIBLE) {
-            final int id = getNextString(R.array.color_values, String.valueOf(mSettingsProvider.getColor()), !event.isShiftPressed());
+            final int id = getNextString(R.array.color_values, String.valueOf(mSettingsManager.getColor()), !event.isShiftPressed());
             final String value = getStringItem(R.array.color_values, id);
             final String key = getStringItem(R.array.color_entries, id);
-            mSettingsProvider.setColor(Integer.parseInt(value));
+            mSettingsManager.setColor(Integer.parseInt(value));
             mToastManager.show(this, getString(R.string.toast_color, key));
             updateFilters();
         } else {
@@ -276,10 +276,10 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     @Override
     public void onChangeContrastSetting(@NonNull final KeyEvent event) {
         if (mImageView.getVisibility() == View.VISIBLE) {
-            final int id = getNextString(R.array.contrast_values, String.valueOf(mSettingsProvider.getContrast()), !event.isShiftPressed());
+            final int id = getNextString(R.array.contrast_values, String.valueOf(mSettingsManager.getContrast()), !event.isShiftPressed());
             final String value = getStringItem(R.array.contrast_values, id);
             final String key = getStringItem(R.array.filter_entries, id);
-            mSettingsProvider.setContrast(Float.parseFloat(value));
+            mSettingsManager.setContrast(Float.parseFloat(value));
             mToastManager.show(this, getString(R.string.toast_contrast, key));
             updateFilters();
         } else {
@@ -298,17 +298,17 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             mToastManager.show(this, getString(R.string.toast_flashlight_disabled));
         } else {
             if (!hasFlashLevels()) {
-                final float flashlight = mSettingsProvider.getFlashlight() == 0.0f ? 1.0f : 0.0f;
-                final int id = mSettingsProvider.getFlashlight() == 0.0f ? 5 : 0;
+                final float flashlight = mSettingsManager.getFlashlight() == 0.0f ? 1.0f : 0.0f;
+                final int id = mSettingsManager.getFlashlight() == 0.0f ? 5 : 0;
                 final String key = getStringItem(R.array.flashlight_entries, id);
                 mToastManager.show(this, getString(R.string.toast_flashlight, key));
-                mSettingsProvider.setFlashlight(flashlight);
+                mSettingsManager.setFlashlight(flashlight);
                 toggleFlashlight(flashlight != 0.0f);
             } else {
-                final int id = getNextString(R.array.flashlight_values, String.valueOf(mSettingsProvider.getFlashlight()), !event.isShiftPressed());
+                final int id = getNextString(R.array.flashlight_values, String.valueOf(mSettingsManager.getFlashlight()), !event.isShiftPressed());
                 final String value = getStringItem(R.array.flashlight_values, id);
                 final String key = getStringItem(R.array.flashlight_entries, id);
-                mSettingsProvider.setFlashlight(Float.parseFloat(value));
+                mSettingsManager.setFlashlight(Float.parseFloat(value));
                 mToastManager.show(this, getString(R.string.toast_flashlight, key));
                 final float flashlight = Float.parseFloat(value);
                 toggleFlashlight(flashlight != 0.0f);
@@ -320,15 +320,15 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     public void onChangePanSetting(@NonNull final KeyEvent event) {
         if (mImageView.getVisibility() == View.VISIBLE) {
             final String current = String.valueOf(event.getKeyCode() == KeyEvent.KEYCODE_X ?
-                mSettingsProvider.getDx() : mSettingsProvider.getDy());
+                mSettingsManager.getDx() : mSettingsManager.getDy());
             final int id = getNextString(R.array.pan_values, current, !event.isShiftPressed());
             final float value = Float.parseFloat(getStringItem(R.array.pan_values, id));
 
             if (event.getKeyCode() == KeyEvent.KEYCODE_X) {
-                mSettingsProvider.setDx(value);
+                mSettingsManager.setDx(value);
                 mToastManager.show(this, getString(R.string.toast_scroll_horizontal, (int)(value * 100)));
             } else {
-                mSettingsProvider.setDy(value);
+                mSettingsManager.setDy(value);
                 mToastManager.show(this, getString(R.string.toast_scroll_vertical, (int)(value * 100)));
             }
         } else {
@@ -343,10 +343,10 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     @Override
     public void onChangeRotationSetting(@NonNull final KeyEvent event) {
         if (mImageView.getVisibility() == View.VISIBLE) {
-            final int id = getNextString(R.array.rotation_values, String.valueOf(mSettingsProvider.getRotation()), !event.isShiftPressed());
+            final int id = getNextString(R.array.rotation_values, String.valueOf(mSettingsManager.getRotation()), !event.isShiftPressed());
             final String value = getStringItem(R.array.rotation_values, id);
             final int rotation = Integer.parseInt(value);
-            mSettingsProvider.setRotation(rotation);
+            mSettingsManager.setRotation(rotation);
             mImageView.setOrientation(rotation);
             mToastManager.show(this, getString(R.string.toast_rotation, rotation));
         } else {
@@ -356,11 +356,11 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     public void onChangeSpeakSetting(@NonNull final KeyEvent event) {
-        final int id = getNextString(R.array.speak_values, String.valueOf(mSettingsProvider.getSpeak()), !event.isShiftPressed());
+        final int id = getNextString(R.array.speak_values, String.valueOf(mSettingsManager.getSpeak()), !event.isShiftPressed());
         final String value = getStringItem(R.array.speak_values, id);
         final String key = getStringItem(R.array.speak_entries, id);
         final int speak = Integer.parseInt(value);
-        mSettingsProvider.setSpeak(speak);
+        mSettingsManager.setSpeak(speak);
         mToastManager.show(this, getString(R.string.toast_speak, key));
         mTextReader.start();
     }
@@ -394,7 +394,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             if (zoomStateLiveData.getValue() != null) {
                 final ZoomState zoomState = zoomStateLiveData.getValue();
                 final float maxZoom = zoomState.getMaxZoomRatio();
-                final int id = getNextString(R.array.zoom_values, String.valueOf(mSettingsProvider.getZoom()), !event.isShiftPressed());
+                final int id = getNextString(R.array.zoom_values, String.valueOf(mSettingsManager.getZoom()), !event.isShiftPressed());
                 final String value = getStringItem(R.array.zoom_values, id);
                 float zoom = Float.parseFloat(value);
                 if (zoom > maxZoom) {
@@ -407,7 +407,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                         }
                     }
                 }
-                mSettingsProvider.setZoom(zoom);
+                mSettingsManager.setZoom(zoom);
                 mToastManager.show(this, getString(R.string.toast_view_live_zoom, zoom));
                 camera.getCameraControl().setZoomRatio(zoom);
             }
@@ -425,8 +425,8 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         final float scale = mImageView.getScale();
         if (center == null || scale == 0) return;
 
-        final float dx = (mImageView.getWidth() * mSettingsProvider.getDx()) / scale;
-        final float dy = (mImageView.getHeight() * mSettingsProvider.getDy()) / scale;
+        final float dx = (mImageView.getWidth() * mSettingsManager.getDx()) / scale;
+        final float dy = (mImageView.getHeight() * mSettingsManager.getDy()) / scale;
 
         PointF result;
         switch(event.getKeyCode()) {
@@ -533,7 +533,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     public boolean onToggleMode() {
         if (mImageView.getVisibility() == View.VISIBLE) {
             mHandler.removeMessages(MSG_IMAGE_OFF);
-            final boolean immediate = mHandler.hasMessages(MSG_FLASHLIGHT_OFF) || (mSettingsProvider.getFlashlight() == 0.0f);
+            final boolean immediate = mHandler.hasMessages(MSG_FLASHLIGHT_OFF) || (mSettingsManager.getFlashlight() == 0.0f);
             mHandler.sendEmptyMessageDelayed(MSG_IMAGE_OFF, immediate ? 0 : IMAGE_OFF_TIMEOUT);
 
             final Camera camera = mCameraManager.getCamera();
@@ -617,9 +617,9 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     }
 
     public void updateFilters() {
-        final float contrast = mSettingsProvider.getContrast();
-        final float brightness = mSettingsProvider.getBrightness();
-        final int color = mSettingsProvider.getColor();
+        final float contrast = mSettingsManager.getContrast();
+        final float brightness = mSettingsManager.getBrightness();
+        final int color = mSettingsManager.getColor();
 
         final float offset = 128f * (1f - contrast) + brightness;
 
@@ -667,7 +667,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             @Override
             public void onCameraReady(Camera camera) {
                 // Initialize zoom on first load
-                final float savedZoom = mSettingsProvider.getZoom();
+                final float savedZoom = mSettingsManager.getZoom();
                 camera.getCameraControl().setZoomRatio(savedZoom);
                 mToastManager.show(MainActivity.this, getString(R.string.toast_view_live_zoom, savedZoom));
                 toggleFlashlight(true);
@@ -713,7 +713,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                                 }
                             }
                         });
-                        mImageView.setOrientation(mSettingsProvider.getRotation());
+                        mImageView.setOrientation(mSettingsManager.getRotation());
                         mImageView.setImage(ImageSource.uri(Uri.fromFile(photoFile)));
                         mImageView.setMinimumTileDpi(120);
                         mIsProcessing = false;
@@ -730,7 +730,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     }
 
     private void showSplashDialog(final boolean always) {
-        if (!always && getVersion().equals(mSettingsProvider.getSplashVersion())) {
+        if (!always && getVersion().equals(mSettingsManager.getSplashVersion())) {
             return;
         }
 
@@ -745,7 +745,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                    @Override
                    public void onClick(@NonNull final DialogInterface dialog, final int which) {
                        if (checkBox.isChecked()) {
-                           mSettingsProvider.setSplashVersion(getVersion());
+                           mSettingsManager.setSplashVersion(getVersion());
                        }
                        dialog.dismiss();
                    }
@@ -814,7 +814,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             return;
         }
 
-        final float flashlight = mSettingsProvider.getFlashlight();
+        final float flashlight = mSettingsManager.getFlashlight();
         if (!enable || flashlight == 0.0f) {
             cameraControl.enableTorch(false);
         } else {

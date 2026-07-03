@@ -24,8 +24,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
-public class SettingsProvider {
-    private static final String TAG = SettingsProvider.class.getSimpleName();
+public class SettingsManager {
+    private static final String TAG = SettingsManager.class.getSimpleName();
 
     private static final String KEY_BRIGHTNESS = "brightness_setting";
     private static final String KEY_COLOR = "color_setting";
@@ -48,7 +48,7 @@ public class SettingsProvider {
     private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume;
     private String mSplashVersion;
 
-    public SettingsProvider(@NonNull final Context context) {
+    public SettingsManager(@NonNull final Context context) {
         mPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
         reload();
     }

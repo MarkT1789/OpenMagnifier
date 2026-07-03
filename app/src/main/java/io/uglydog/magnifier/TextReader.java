@@ -71,7 +71,7 @@ public class TextReader implements Handler.Callback {
     private final Handler mMainHandler;
     private final Handler mBackgroundHandler;
     private final HandlerThread mBackgroundThread;
-    private final SettingsProvider mSettingsProvider;
+    private final SettingsManager mSettingsManager;
     private final Context mContext;
 
     private TextRecognizer mTextRecognizer;
@@ -134,7 +134,7 @@ public class TextReader implements Handler.Callback {
                 @Override
                 public void run() {
                     final TextReader r = mReaderRef.get();
-                    if (r == null || r.mIsDestroyed || r.mTextReaderOverlay == null || r.mSettingsProvider.getBanner() == 0) return;
+                    if (r == null || r.mIsDestroyed || r.mTextReaderOverlay == null || r.mSettingsManager.getBanner() == 0) return;
 
                     final String text = r.mHashMap.get(utteranceId);
                     if (text != null) {
@@ -324,12 +324,12 @@ public class TextReader implements Handler.Callback {
         }
     }
 
-    public TextReader(final Context context, final SubsamplingScaleImageView imageView, final TextReaderOverlay overlay, final String file, final SettingsProvider settings, final ToastManager toastManager) {
+    public TextReader(final Context context, final SubsamplingScaleImageView imageView, final TextReaderOverlay overlay, final String file, final SettingsManager settings, final ToastManager toastManager) {
         mContext = context;
         mImageView = imageView;
         mTextReaderOverlay = overlay;
         mFile = new File(context.getCacheDir(), file);
-        mSettingsProvider = settings;
+        mSettingsManager = settings;
         mTtsReady = false;
         mTtsStarting = false;
         mIsDestroyed = false;
@@ -350,11 +350,11 @@ public class TextReader implements Handler.Callback {
     }
 
     private void setupTextRecognizer() {
-        final int speak = mSettingsProvider.getSpeak();
+        final int speak = mSettingsManager.getSpeak();
         if (speak > 0) {
             mHashMap.clear();
             mArrayList.clear();
-            mTranslationManager.prepare(mSettingsProvider.getSource(), mSettingsProvider.getDest());
+            mTranslationManager.prepare(mSettingsManager.getSource(), mSettingsManager.getDest());
         }
         if (speak == mSpeak) {
             return;
@@ -433,7 +433,7 @@ public class TextReader implements Handler.Callback {
         if (BuildConfig.DEBUG) Log.d(TAG, "start");
         setupTextRecognizer();
         mMainHandler.removeMessages(MSG_SPEAK);
-        if (mSettingsProvider.getSpeak() != 0 && !mIsDestroyed) {
+        if (mSettingsManager.getSpeak() != 0 && !mIsDestroyed) {
             mMainHandler.sendEmptyMessageDelayed(MSG_SPEAK, 2000);
         }
     }
@@ -544,7 +544,7 @@ public class TextReader implements Handler.Callback {
     }
 
     public boolean onVolumeChanged(final int cmd) {
-        if (mSettingsProvider.getVolume() == 0 || mSettingsProvider.getSpeak() == 0) return false;
+        if (mSettingsManager.getVolume() == 0 || mSettingsManager.getSpeak() == 0) return false;
 
         final String currentId = mHashMap.get("current");
         if (currentId == null) return false;
