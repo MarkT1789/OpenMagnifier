@@ -19,7 +19,6 @@ package io.uglydog.magnifier;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
@@ -48,8 +47,8 @@ public class SettingsManager {
     private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume;
     private String mSplashVersion;
 
-    public SettingsManager(@NonNull final Context context) {
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+    public SettingsManager(@NonNull final SharedPreferences sharedPreferences) {
+        this.mPrefs = sharedPreferences;
         reload();
     }
 
@@ -209,44 +208,44 @@ public class SettingsManager {
 
     private String getString(@NonNull final String key, @NonNull final String defaultValue) {
         String value = mPrefs.getString(key, defaultValue);
-        if (BuildConfig.DEBUG) Log.d(TAG, "getString: " + key + " = " + value);
+        if (BuildConfig.DEBUG) Logger.d(TAG, "getString: " + key + " = " + value);
         return value;
     }
 
     private void setString(@NonNull final String key, @NonNull final String value) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "setString: " + key + " = " + value);
+        if (BuildConfig.DEBUG) Logger.d(TAG, "setString: " + key + " = " + value);
         mPrefs.edit().putString(key, value).apply();
     }
 
     private float getFloat(@NonNull final String key, @NonNull final float defaultValue) {
         try {
             final float value = Float.parseFloat(mPrefs.getString(key, String.valueOf(defaultValue)));
-            if (BuildConfig.DEBUG) Log.d(TAG, "getFloat: " + key + " = " + value);
+            if (BuildConfig.DEBUG) Logger.d(TAG, "getFloat: " + key + " = " + value);
             return value;
         } catch (Exception e) {
-            Log.e(TAG, "getFloat: error: " + key + " : " + e);
+            Logger.e(TAG, "getFloat: error: " + key + " : " + e);
             return defaultValue;
         }
     }
 
     private void setFloat(@NonNull final String key, float value) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "setFloat: " + key + " = " + value);
+        if (BuildConfig.DEBUG) Logger.d(TAG, "setFloat: " + key + " = " + value);
         mPrefs.edit().putString(key, String.valueOf(value)).apply();
     }
 
     private int getInt(@NonNull final String key, final int defaultValue) {
         try {
             final int value = Integer.parseInt(mPrefs.getString(key, String.valueOf(defaultValue)));
-            if (BuildConfig.DEBUG) Log.d(TAG, "getInt: " + key + " = " + value);
+            if (BuildConfig.DEBUG) Logger.d(TAG, "getInt: " + key + " = " + value);
             return value;
         } catch (Exception e) {
-            Log.e(TAG, "getInt: error: " + key + " : " + e);
+            Logger.e(TAG, "getInt: error: " + key + " : " + e);
             return defaultValue;
         }
     }
 
     private void setInt(@NonNull final String key, final int value) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "setInt: " + key + " = " + value);
+        if (BuildConfig.DEBUG) Logger.d(TAG, "setInt: " + key + " = " + value);
         mPrefs.edit().putString(key, String.valueOf(value)).apply();
     }
 }

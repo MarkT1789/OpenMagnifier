@@ -20,6 +20,7 @@ package io.uglydog.magnifier;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
@@ -60,6 +61,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.LiveData;
+import androidx.preference.PreferenceManager;
 
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
@@ -112,7 +114,8 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mImageView = findViewById(R.id.ivLastCapture);
         mImageView.setMinimumScaleType(SubsamplingScaleImageView.SCALE_TYPE_CENTER_CROP);
 
-        mSettingsManager = new SettingsManager(this);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        mSettingsManager = new SettingsManager(prefs);
         mCameraManager = new CameraManager(this, findViewById(R.id.viewFinder));
         mGestureDetector = new GestureDetector(this, new GestureListener(this));
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener(this));
