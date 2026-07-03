@@ -104,4 +104,7 @@ dependencies {
 
     // Google ML Kit Text Translation dependency
     implementation("com.google.mlkit:translate:17.0.3")
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:5.11.0")
 }

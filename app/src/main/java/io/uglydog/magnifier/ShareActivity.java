@@ -56,6 +56,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     private SettingsProvider mSettingsProvider;
     private TextReader mTextReader;
     private TextReaderOverlay mTextReaderOverlay;
+    private ToastManager mToastManager;
 
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
 
@@ -67,6 +68,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         Log.i(TAG, "onCreate: shared activity");
 
         setupWindow();
+        mToastManager = new ToastManager(new AndroidToastFactory());
 
         mImageView = findViewById(R.id.ivLastCapture);
         if (mImageView == null) {
@@ -234,7 +236,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
                         if (isFinishing() || isDestroyed()) return;
 
                         if (success) {
-                            mTextReader = new TextReader(ShareActivity.this, mImageView, mTextReaderOverlay, FILE, mSettingsProvider);
+                            mTextReader = new TextReader(ShareActivity.this, mImageView, mTextReaderOverlay, FILE, mSettingsProvider, mToastManager);
                             mImageView.setImage(ImageSource.uri(Uri.fromFile(new File(getCacheDir(), FILE))));
                             mTextReader.start();
                         } else {

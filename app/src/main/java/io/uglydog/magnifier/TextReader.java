@@ -324,7 +324,7 @@ public class TextReader implements Handler.Callback {
         }
     }
 
-    public TextReader(final Context context, final SubsamplingScaleImageView imageView, final TextReaderOverlay overlay, final String file, final SettingsProvider settings) {
+    public TextReader(final Context context, final SubsamplingScaleImageView imageView, final TextReaderOverlay overlay, final String file, final SettingsProvider settings, final ToastManager toastManager) {
         mContext = context;
         mImageView = imageView;
         mTextReaderOverlay = overlay;
@@ -334,7 +334,7 @@ public class TextReader implements Handler.Callback {
         mTtsStarting = false;
         mIsDestroyed = false;
         mTextRecognizer = null;
-        mTranslationManager = new TranslationManager(context, overlay);
+        mTranslationManager = new TranslationManager(context, overlay, toastManager);
         mTts = null;
         mSpeak = -1;
         mHashMap = new HashMap<String, String>();

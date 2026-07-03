@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     private TextReader mTextReader;
     private TextReaderOverlay mTextReaderOverlay;
+    private ToastManager mToastManager;
 
     private static final int MSG_FLASHLIGHT_OFF = 1;
     private static final int MSG_IMAGE_OFF = 2;
@@ -107,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
         setupWindow();
 
+        mToastManager = new ToastManager(new AndroidToastFactory());
         mImageView = findViewById(R.id.ivLastCapture);
         mImageView.setMinimumScaleType(SubsamplingScaleImageView.SCALE_TYPE_CENTER_CROP);
 
@@ -116,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener(this));
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
         mTextReaderOverlay.setSettingsProvider(mSettingsProvider);
-        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsProvider);
+        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsProvider, mToastManager);
 
         showSplashDialog(false);
         updateFilters();
@@ -151,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         super.onPause();
         if (BuildConfig.DEBUG) Log.d(TAG, "onPause");
         mTextReader.stop();
-        ToastHelper.cancel();
+        mToastManager.cancel();
     }
 
     @Override
@@ -234,7 +236,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                 camera.getCameraControl().setZoomRatio(next);
             }
             if (finished) {
-                ToastHelper.show(this, getString(R.string.toast_view_live_zoom, next));
+                mToastManager.show(this, getString(R.string.toast_view_live_zoom, next));
             }
         }
     }
@@ -250,10 +252,10 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             final String value = getStringItem(R.array.brightness_values, id);
             final String key = getStringItem(R.array.filter_entries, id);
             mSettingsProvider.setBrightness(Float.parseFloat(value));
-            ToastHelper.show(this, getString(R.string.toast_brightness, key));
+            mToastManager.show(this, getString(R.string.toast_brightness, key));
             updateFilters();
         } else {
-            ToastHelper.show(this, getString(R.string.toast_brightness_disabled));
+            mToastManager.show(this, getString(R.string.toast_brightness_disabled));
         }
     }
 
@@ -264,10 +266,10 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             final String value = getStringItem(R.array.color_values, id);
             final String key = getStringItem(R.array.color_entries, id);
             mSettingsProvider.setColor(Integer.parseInt(value));
-            ToastHelper.show(this, getString(R.string.toast_color, key));
+            mToastManager.show(this, getString(R.string.toast_color, key));
             updateFilters();
         } else {
-            ToastHelper.show(this, getString(R.string.toast_color_disabled));
+            mToastManager.show(this, getString(R.string.toast_color_disabled));
         }
     }
 
@@ -278,28 +280,28 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             final String value = getStringItem(R.array.contrast_values, id);
             final String key = getStringItem(R.array.filter_entries, id);
             mSettingsProvider.setContrast(Float.parseFloat(value));
-            ToastHelper.show(this, getString(R.string.toast_contrast, key));
+            mToastManager.show(this, getString(R.string.toast_contrast, key));
             updateFilters();
         } else {
-            ToastHelper.show(this, getString(R.string.toast_contrast_disabled));
+            mToastManager.show(this, getString(R.string.toast_contrast_disabled));
         }
     }
 
     @Override
     public void onChangeFlashlightSetting(@NonNull final KeyEvent event) {
         if (!hasFlash()) {
-            ToastHelper.show(this, getString(R.string.toast_flashlight_none));
+            mToastManager.show(this, getString(R.string.toast_flashlight_none));
             return;
         }
 
         if (mImageView.getVisibility() == View.VISIBLE) {
-            ToastHelper.show(this, getString(R.string.toast_flashlight_disabled));
+            mToastManager.show(this, getString(R.string.toast_flashlight_disabled));
         } else {
             if (!hasFlashLevels()) {
                 final float flashlight = mSettingsProvider.getFlashlight() == 0.0f ? 1.0f : 0.0f;
                 final int id = mSettingsProvider.getFlashlight() == 0.0f ? 5 : 0;
                 final String key = getStringItem(R.array.flashlight_entries, id);
-                ToastHelper.show(this, getString(R.string.toast_flashlight, key));
+                mToastManager.show(this, getString(R.string.toast_flashlight, key));
                 mSettingsProvider.setFlashlight(flashlight);
                 toggleFlashlight(flashlight != 0.0f);
             } else {
@@ -307,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                 final String value = getStringItem(R.array.flashlight_values, id);
                 final String key = getStringItem(R.array.flashlight_entries, id);
                 mSettingsProvider.setFlashlight(Float.parseFloat(value));
-                ToastHelper.show(this, getString(R.string.toast_flashlight, key));
+                mToastManager.show(this, getString(R.string.toast_flashlight, key));
                 final float flashlight = Float.parseFloat(value);
                 toggleFlashlight(flashlight != 0.0f);
             }
@@ -324,16 +326,16 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
             if (event.getKeyCode() == KeyEvent.KEYCODE_X) {
                 mSettingsProvider.setDx(value);
-                ToastHelper.show(this, getString(R.string.toast_scroll_horizontal, (int)(value * 100)));
+                mToastManager.show(this, getString(R.string.toast_scroll_horizontal, (int)(value * 100)));
             } else {
                 mSettingsProvider.setDy(value);
-                ToastHelper.show(this, getString(R.string.toast_scroll_vertical, (int)(value * 100)));
+                mToastManager.show(this, getString(R.string.toast_scroll_vertical, (int)(value * 100)));
             }
         } else {
             if (event.getKeyCode() == KeyEvent.KEYCODE_X) {
-                ToastHelper.show(this, getString(R.string.toast_scroll_horizontal_disabled));
+                mToastManager.show(this, getString(R.string.toast_scroll_horizontal_disabled));
             } else {
-                ToastHelper.show(this, getString(R.string.toast_scroll_vertical_disabled));
+                mToastManager.show(this, getString(R.string.toast_scroll_vertical_disabled));
             }
         }
     }
@@ -346,9 +348,9 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             final int rotation = Integer.parseInt(value);
             mSettingsProvider.setRotation(rotation);
             mImageView.setOrientation(rotation);
-            ToastHelper.show(this, getString(R.string.toast_rotation, rotation));
+            mToastManager.show(this, getString(R.string.toast_rotation, rotation));
         } else {
-            ToastHelper.show(this, getString(R.string.toast_rotation_disabled));
+            mToastManager.show(this, getString(R.string.toast_rotation_disabled));
         }
     }
 
@@ -359,7 +361,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         final String key = getStringItem(R.array.speak_entries, id);
         final int speak = Integer.parseInt(value);
         mSettingsProvider.setSpeak(speak);
-        ToastHelper.show(this, getString(R.string.toast_speak, key));
+        mToastManager.show(this, getString(R.string.toast_speak, key));
         mTextReader.start();
     }
 
@@ -385,7 +387,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             }
             scale = min + id * d;
             mImageView.setScaleAndCenter(scale, center);
-            ToastHelper.show(this, getString(R.string.toast_view_freeze_frame_zoom, scale / mImageView.getMinScale()));
+            mToastManager.show(this, getString(R.string.toast_view_freeze_frame_zoom, scale / mImageView.getMinScale()));
         } else {
             final Camera camera = mCameraManager.getCamera();
             final LiveData<ZoomState> zoomStateLiveData = camera.getCameraInfo().getZoomState();
@@ -406,7 +408,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                     }
                 }
                 mSettingsProvider.setZoom(zoom);
-                ToastHelper.show(this, getString(R.string.toast_view_live_zoom, zoom));
+                mToastManager.show(this, getString(R.string.toast_view_live_zoom, zoom));
                 camera.getCameraControl().setZoomRatio(zoom);
             }
         }
@@ -415,7 +417,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     @Override
     public void onScrollViewport(@NonNull final KeyEvent event) {
         if (mImageView.getVisibility() != View.VISIBLE) {
-            ToastHelper.show(MainActivity.this, getString(R.string.toast_scroll_disabled));
+            mToastManager.show(MainActivity.this, getString(R.string.toast_scroll_disabled));
             return;
         }
 
@@ -488,7 +490,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     public void onShowVersion() {
-        ToastHelper.show(this, getString(R.string.version_known, getVersion()));
+        mToastManager.show(this, getString(R.string.version_known, getVersion()));
     }
 
     /*
@@ -539,9 +541,8 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             if (zoomStateLiveData.getValue() != null) {
                 final ZoomState zoomState = zoomStateLiveData.getValue();
                 final float zoom = zoomState.getZoomRatio();
-                ToastHelper.show(this, getString(R.string.toast_view_live_zoom, zoom));
+                mToastManager.show(this, getString(R.string.toast_view_live_zoom, zoom));
             }
-            //FIXME ToastHelper.show(this, getString(R.string.toast_view_live_zoom, mSettingsProvider.getZoom()));
             toggleFlashlight(true);
             mTextReader.stop();
             mTextReaderOverlay.showCopyright(false);
@@ -550,7 +551,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         }
 
         if (!mIsProcessing) {
-            ToastHelper.show(this, getString(R.string.toast_view_freeze_frame));
+            mToastManager.show(this, getString(R.string.toast_view_freeze_frame));
             captureToView();
             return true;
         }
@@ -668,7 +669,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                 // Initialize zoom on first load
                 final float savedZoom = mSettingsProvider.getZoom();
                 camera.getCameraControl().setZoomRatio(savedZoom);
-                ToastHelper.show(MainActivity.this, getString(R.string.toast_view_live_zoom, savedZoom));
+                mToastManager.show(MainActivity.this, getString(R.string.toast_view_live_zoom, savedZoom));
                 toggleFlashlight(true);
             }
         });

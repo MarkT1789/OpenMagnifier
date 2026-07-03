@@ -52,12 +52,14 @@ public class TranslationManager {
     private int mTtsId;
     private final Context mContext;
     private final TextReaderOverlay mTextReaderOverlay;
+    private final ToastManager mToastManager;
 
     private long mActiveSessionId = 0;
 
-    public TranslationManager(final Context context, TextReaderOverlay overlay) {
+    public TranslationManager(final Context context, TextReaderOverlay overlay, ToastManager toastManager) {
         mContext = context.getApplicationContext();
         mTextReaderOverlay = overlay;
+        mToastManager = toastManager;
         reset();
     }
 
@@ -79,7 +81,7 @@ public class TranslationManager {
                         Log.i(TAG, "prepare: models are downloaded and ready");
                         manager.mIsReady = true;
                         if (manager.mIsDownloading) {
-                            ToastHelper.show(manager.mContext, manager.mContext.getString(R.string.toast_translation_downloaded));
+                            manager.mToastManager.show(manager.mContext, manager.mContext.getString(R.string.toast_translation_downloaded));
                             manager.mIsDownloading = false;
                         }
                     }
@@ -242,7 +244,7 @@ public class TranslationManager {
                 arrayList.add(id);
             }
             if (!mIsReady && mTranslator != null) {
-                ToastHelper.show(mContext, mContext.getString(R.string.toast_translation_downloading));
+                mToastManager.show(mContext, mContext.getString(R.string.toast_translation_downloading));
                 mIsDownloading = true;
             }
             tts.speak(text, TextToSpeech.QUEUE_ADD, null, id);
