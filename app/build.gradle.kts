@@ -64,6 +64,23 @@ android {
     buildFeatures {
         buildConfig = true
     }
+    testOptions {
+        unitTests {
+            // Allows Robolectric to resolve R.string.translate_attribution
+            isIncludeAndroidResources = true
+
+            // Forces coverage tracking engines to accept Robolectric runtime classes
+            all {
+                // Configures the underlying JaCoCo engine safely
+                it.extensions.configure(org.gradle.testing.jacoco.plugins.JacocoTaskExtension::class.java) {
+                    isIncludeNoLocationClasses = true
+
+                    // Excludes JDK reflection internals from being instrumented by JaCoCo
+                    excludes = listOf("jdk.internal.*")
+                }
+             }
+        }
+    }
 }
 
 dependencies {
@@ -110,4 +127,6 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("org.robolectric:robolectric:4.13")
 }

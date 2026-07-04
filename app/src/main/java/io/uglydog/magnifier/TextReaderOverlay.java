@@ -35,7 +35,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class TextReaderOverlay extends View implements Handler.Callback {
+public class TextReaderOverlay extends View implements Handler.Callback, ITextReaderOverlay {
 
     private static final float STROKE_WIDTH = 11.0f;
     private static final float TEXT_SIZE = 23.0f;
@@ -48,9 +48,9 @@ public class TextReaderOverlay extends View implements Handler.Callback {
     private final Paint mTextPaint;
     private final Paint mCopyrightPaint;
     private final Paint mBackgroundPaint;
-    private final Handler mMainHandler;
     private final String mText;
 
+    private Handler mMainHandler;
     private SettingsManager mSettingsManager;
 
     private int mBackgroundHeight;
@@ -95,11 +95,23 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         updateTextSize();
     }
 
+    @Override
+    public View asView() {
+        return this;
+    }
+
+    @Override
+    public void setHandler(@NonNull Handler handler) {
+        mMainHandler = new Handler(handler.getLooper(), this);
+    }
+
+    @Override
     public void setSettingsManager(SettingsManager settingsManager) {
         mSettingsManager = settingsManager;
         updateTextSize();
     }
 
+    @Override
     public void clear() {
         setRect(null);
         setText(null, -1, -1);
@@ -108,6 +120,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         }
     }
 
+    @Override
     public void setRect(@Nullable final Rect rect) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             updateRect(rect);
@@ -122,7 +135,8 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         }
     }
 
-    public void setText(String text, int start, int end) {
+    @Override
+    public void setText(final String text, final int start, final int end) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             updateText(text, start, end);
         } else {
@@ -145,7 +159,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         } else {
             mRect.set(rect);
         }
-       invalidate();
+        invalidate();
     }
 
     private void updateText(String text, int start, int end) {
@@ -195,6 +209,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         super.onDetachedFromWindow();
     }
 
+    @Override
     public void showCopyright(final boolean enable) {
         mShowCopyright = enable;
     }
@@ -216,11 +231,11 @@ public class TextReaderOverlay extends View implements Handler.Callback {
             final TextPaint textPaint = new TextPaint();
             textPaint.set(mTextPaint);
             StaticLayout staticLayout = StaticLayout.Builder.obtain(str, 0, str.length(), textPaint, width)
-                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                .setLineSpacing(0.0f, 1.0f)
-                .setMaxLines(1)
-                .setIncludePad(false)
-                .build();
+                    .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                    .setLineSpacing(0.0f, 1.0f)
+                    .setMaxLines(1)
+                    .setIncludePad(false)
+                    .build();
 
             mCount = staticLayout.getLineEnd(0);
 
@@ -251,10 +266,12 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         return false;
     }
 
+    @Override
     public void close() {
         mMainHandler.removeCallbacksAndMessages(null);
     }
 
+    @Override
     public void clearOverlay() {
         mShowBackground = false;
         setRect(null);
@@ -269,6 +286,7 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         invalidate();
     }
 
+    @Override
     public void updateTextSize() {
         final float banner_size = mSettingsManager != null ? mSettingsManager.getBannerSize() : 1.0f;
         final float pxSize = TypedValue.applyDimension(
@@ -281,5 +299,15 @@ public class TextReaderOverlay extends View implements Handler.Callback {
         final Paint.FontMetrics metrics = mTextPaint.getFontMetrics();
         final int textHeight = (int)(metrics.descent - metrics.ascent);
         mBackgroundHeight = textHeight + OFFSET * 2;
+    }
+
+    // Package-private accessors purely to verify internal states in Unit Tests
+    Rect getInternalRect() { return mRect; }
+    boolean isShowCopyright() { return mShowCopyright; }
+    boolean isShowBackground() { return mShowBackground; }
+    String getTts() { return mTts; }
+    int getStart() { return mStart; }
+    void setIsAttachedToWindow(boolean attached) {
+        // Mocking framework utility or internal reflection bypass token
     }
 }

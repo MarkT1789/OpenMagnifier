@@ -17,18 +17,19 @@
 
 package io.uglydog.magnifier;
 
-import org.junit.Test;
+import android.graphics.Rect;
+import android.os.Handler;
+import android.view.View;
 
-import static org.junit.Assert.*;
-
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
- */
-public class ExampleUnitTest {
-    @Test
-    public void addition_isCorrect() {
-        assertEquals(4, 2 + 2);
-    }
+public interface ITextReaderOverlay {
+    void setSettingsManager(SettingsManager settingsManager);
+    void setHandler(Handler handler);
+    void clear();
+    void setRect(Rect rect);
+    void setText(String text, int start, int end);
+    void showCopyright(boolean enable);
+    void close();
+    void clearOverlay();
+    void updateTextSize();
+    View asView();
 }
