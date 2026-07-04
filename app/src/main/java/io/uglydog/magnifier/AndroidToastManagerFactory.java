@@ -24,9 +24,9 @@ import androidx.annotation.NonNull;
 
 public class AndroidToastManagerFactory implements ToastManager.ToastFactory {
     @Override
-    public IToastManager create(@NonNull Context context, @NonNull String msg, int duration) {
+    public IToast create(@NonNull Context context, @NonNull String msg, int duration) {
         final Toast mToast = Toast.makeText(context, msg, duration);
-        return new IToastManager() {
+        return new IToast() {
             @Override
             public void show() {
                 mToast.show();

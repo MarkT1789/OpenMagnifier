@@ -17,7 +17,7 @@
 
 package io.uglydog.magnifier;
 
-public interface IToastManager {
+public interface IToast {
     void show();
     void cancel();
 }

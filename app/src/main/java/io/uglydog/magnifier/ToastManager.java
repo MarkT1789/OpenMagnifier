@@ -24,10 +24,10 @@ import androidx.annotation.NonNull;
 
 public class ToastManager {
     private final ToastFactory mFactory;
-    private IToastManager mCurrentToast;
+    private IToast mCurrentToast;
 
     public interface ToastFactory {
-        IToastManager create(@NonNull Context context, @NonNull String msg, int duration);
+        IToast create(@NonNull Context context, @NonNull String msg, int duration);
     }
 
     public ToastManager(@NonNull ToastFactory factory) {
