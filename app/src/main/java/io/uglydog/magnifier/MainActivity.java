@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mSettingsManager = new SettingsManager(prefs);
         mCameraManager = new CameraManager(this, findViewById(R.id.viewFinder));
         mGestureDetector = new GestureDetector(this, new GestureListener(this));
-        mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener(this));
+        mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener(this, new AndroidSystemClock()));
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
         mTextReaderOverlay.setSettingsManager(mSettingsManager);
         mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, mToastManager);

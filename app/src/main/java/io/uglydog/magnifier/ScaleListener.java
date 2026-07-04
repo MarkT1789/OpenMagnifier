@@ -17,14 +17,13 @@
 
 package io.uglydog.magnifier;
 
-import android.os.SystemClock;
 import android.view.ScaleGestureDetector;
-
 import androidx.annotation.NonNull;
 
 public class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
     private static final String TAG = ScaleListener.class.getSimpleName();
     private final ScaleActions mActions;
+    private final ISystemClock mClock; // Injected dependency
     private long mTime;
     private float mScale;
 
@@ -32,8 +31,10 @@ public class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureList
         void onScale(float scale, boolean finished);
     }
 
-    public ScaleListener(@NonNull final ScaleActions actions) {
+    // Java 7 compliant DI Constructor
+    public ScaleListener(@NonNull final ScaleActions actions, @NonNull final ISystemClock clock) {
         mActions = actions;
+        mClock = clock;
     }
 
     @Override
@@ -48,9 +49,12 @@ public class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureList
     public boolean onScale(@NonNull ScaleGestureDetector detector) {
         final float scale = detector.getScaleFactor();
         if (BuildConfig.DEBUG) Logger.d(TAG, "onScale " + scale);
-        final long current = SystemClock.uptimeMillis();
+        
+        // Using the injected interface instead of Android's static SystemClock
+        final long current = mClock.uptimeMillis();
         final long delay = current - mTime;
         mScale *= scale;
+        
         if (delay > 30 || mScale > 1.05f || mScale < 0.95f)  {
             mActions.onScale(mScale, false);
             mTime = current;
@@ -63,6 +67,6 @@ public class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureList
     public void onScaleEnd(@NonNull ScaleGestureDetector detector) {
         if (BuildConfig.DEBUG) Logger.d(TAG, "onScaleEnd");
         mActions.onScale(mScale, true);
-        super.onScaleEnd(detector);
+        // FIXME super.onScaleEnd(detector);
     }
 }
