@@ -18,7 +18,7 @@
 package io.uglydog.magnifier;
 
 public class Logger {
-    public static void d(String tag, String message) {
+    public static void d(final String tag, final String message) {
         try {
             android.util.Log.d(tag, message);
         } catch (RuntimeException e) {
@@ -26,7 +26,7 @@ public class Logger {
         }
     }
 
-    public static void i(String tag, String message) {
+    public static void i(final String tag, final String message) {
         try {
             android.util.Log.i(tag, message);
         } catch (RuntimeException e) {
@@ -34,7 +34,14 @@ public class Logger {
         }
     }
 
-    public static void e(String tag, String message) {
+    public static void w(final String tag, final String message) {
+        try {
+            android.util.Log.w(tag, message);
+        } catch (RuntimeException e) {
+            System.out.println("[" + tag + "] WARN: " + message);
+        }
+    }
+    public static void e(final String tag, final String message) {
         try {
             android.util.Log.e(tag, message);
         } catch (RuntimeException e) {

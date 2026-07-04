@@ -24,7 +24,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -67,14 +66,14 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        Log.i(TAG, "onCreate: shared activity");
+        Logger.i(TAG, "onCreate: shared activity");
 
         setupWindow();
         mToastManager = new ToastManager(new AndroidToastManagerFactory());
 
         mImageView = findViewById(R.id.ivLastCapture);
         if (mImageView == null) {
-            Log.e(TAG, "onCreate: no image view");
+            Logger.e(TAG, "onCreate: no image view");
             finish();
             return;
         }
@@ -107,7 +106,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
         mTextReaderOverlay.setSettingsManager(mSettingsManager);
         if (mTextReaderOverlay == null) {
-            Log.e(TAG, "onCreate: no text overlay view");
+            Logger.e(TAG, "onCreate: no text overlay view");
             finish();
             return;
         }
@@ -119,7 +118,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     protected void onNewIntent(final Intent intent) {
         super.onNewIntent(intent);
 
-        Log.i(TAG, "onNewIntent: shared activity");
+        Logger.i(TAG, "onNewIntent: shared activity");
 
         setIntent(intent);
         handleIntent(intent);
@@ -127,7 +126,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
 
     private void handleIntent(final Intent intent) {
         if (intent == null) {
-            Log.e(TAG, "handleIntent: no intent");
+            Logger.e(TAG, "handleIntent: no intent");
             finish();
             return;
         }
@@ -136,23 +135,23 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         final String type = intent.getType();
 
         if (type == null || action == null) {
-            Log.e(TAG, "handleIntent: bad intent");
+            Logger.e(TAG, "handleIntent: bad intent");
             finish();
             return;
         }
 
-        Log.i(TAG, "handleIntent: type=" + type + " action=" + action);
+        Logger.i(TAG, "handleIntent: type=" + type + " action=" + action);
 
         if (Intent.ACTION_SEND.equals(action)) {
             if (type.startsWith("image/")) {
-                Log.i(TAG, "handleIntent: single image");
+                Logger.i(TAG, "handleIntent: single image");
                 handleSingleImage(intent);
             } else {
-                Log.e(TAG, "handleIntent: unknown type: " + type);
+                Logger.e(TAG, "handleIntent: unknown type: " + type);
                 finish();
             }
         } else {
-            Log.e(TAG, "handleIntent: unknown action: " + action);
+            Logger.e(TAG, "handleIntent: unknown action: " + action);
             finish();
         }
     }
@@ -161,7 +160,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     protected void onPause() {
         super.onPause();
 
-        if (BuildConfig.DEBUG) Log.d(TAG, "onPause");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onPause");
 
         if (mTextReader != null) {
             mTextReader.stop();
@@ -172,7 +171,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     protected void onResume() {
         super.onResume();
 
-        if (BuildConfig.DEBUG) Log.d(TAG, "onResume");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onResume");
 
         if (isFinishing() || isDestroyed()) {
             return;
@@ -209,7 +208,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
                 photoFile.delete();
             }
         } catch (Exception e) {
-            Log.e(TAG, "error deleting cached photo", e);
+            Logger.e(TAG, "Error deleting cached photo: " + e);
         }
 
         super.onDestroy();
@@ -224,7 +223,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         }
 
         if (imageUri == null) {
-            Log.e(TAG, "handleSingleImage: no image uri");
+            Logger.e(TAG, "handleSingleImage: no image uri");
             finish();
             return;
         }
@@ -243,7 +242,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
                             mImageView.setImage(ImageSource.uri(Uri.fromFile(new File(getCacheDir(), FILE))));
                             mTextReader.start();
                         } else {
-                            Log.e(TAG, "getFileFromContentUri failed");
+                            Logger.e(TAG, "getFileFromContentUri failed");
                             finish();
                         }
                     }
@@ -267,7 +266,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     }
 
     private boolean getFileFromContentUri(@NonNull final Context context, @NonNull final Uri contentUri) {
-        Log.i(TAG, "getFileFromContentUri " + FILE);
+        Logger.i(TAG, "getFileFromContentUri " + FILE);
         final File tempFile = new File(context.getCacheDir(), FILE);
         InputStream inputStream = null;
         FileOutputStream outputStream = null;
@@ -287,21 +286,21 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
             }
             success = true;
         } catch (Exception e) {
-            Log.e(TAG, "getFileFromContentUri: exception", e);
+            Logger.e(TAG, "getFileFromContentUri: exception: " +  e);
             success = false;
         } finally {
             if (outputStream != null) {
                 try {
                     outputStream.close();
                 } catch (IOException e) {
-                    Log.e(TAG, "getFileFromContentUri: error closing output stream", e);
+                    Logger.e(TAG, "getFileFromContentUri: error closing output stream: " + e);
                 }
             }
             if (inputStream != null) {
                 try {
                     inputStream.close();
                 } catch (IOException e) {
-                    Log.e(TAG, "getFileFromContentUri: error closing input stream", e);
+                    Logger.e(TAG, "getFileFromContentUri: error closing input stream: " + e);
                 }
             }
         }

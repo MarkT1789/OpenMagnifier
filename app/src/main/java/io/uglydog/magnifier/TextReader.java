@@ -29,7 +29,6 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
-import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -107,13 +106,13 @@ public class TextReader implements Handler.Callback {
             if (status == TextToSpeech.SUCCESS) {
                 final int result = reader.mTts.setLanguage(mLocale);
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.e(TAG, "TextToSpeech: locale not supported or missing data locale=" + mLocale);
+                    Logger.e(TAG, "TextToSpeech: locale not supported or missing data locale=" + mLocale);
                 } else {
-                    Log.i(TAG, "TextToSpeech: ready locale=" + mLocale);
+                    Logger.i(TAG, "TextToSpeech: ready locale=" + mLocale);
                     reader.mTtsReady = true;
                 }
             } else {
-                Log.e(TAG, "TextToSpeech: initialization failed status=" + status);
+                Logger.e(TAG, "TextToSpeech: initialization failed status=" + status);
             }
         }
     }
@@ -287,7 +286,7 @@ public class TextReader implements Handler.Callback {
                     final String text = block.getText().replaceAll("[\\r\\n]+", " ");
 
                     translationManager.translate(reader.mTts, reader.mHashMap, reader.mArrayList, text, id);
-                    if (BuildConfig.DEBUG) Log.d(TAG, "TextRecognition: text=" + text + " bounds=" + bounds + " id=" + id);
+                    if (BuildConfig.DEBUG) Logger.d(TAG, "TextRecognition: text=" + text + " bounds=" + bounds + " id=" + id);
                 }
             } finally {
                 if (mBitmap != null && !mBitmap.isRecycled()) {
@@ -317,7 +316,7 @@ public class TextReader implements Handler.Callback {
                 }
                 return;
             }
-            Log.e(TAG, "TextRecognition: failed exception=", e);
+            Logger.e(TAG, "TextRecognition: failed: " + e);
             if (mBitmap != null && !mBitmap.isRecycled()) {
                 mBitmap.recycle();
             }
@@ -369,19 +368,19 @@ public class TextReader implements Handler.Callback {
 
         switch(mSpeak) {
             case 1: /* Latin */
-                Log.i(TAG, "TextRecognizer Latin");
+                Logger.i(TAG, "TextRecognizer Latin");
                 mTextRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
             break;
             case 2: /* Chinese */
-                Log.i(TAG, "TextRecognizer Chinese");
+                Logger.i(TAG, "TextRecognizer Chinese");
                 mTextRecognizer = TextRecognition.getClient(new ChineseTextRecognizerOptions.Builder().build());
             break;
             case 3: /* Devanagari */
-                Log.i(TAG, "TextRecognizer Devanagari");
+                Logger.i(TAG, "TextRecognizer Devanagari");
                 mTextRecognizer = TextRecognition.getClient(new DevanagariTextRecognizerOptions.Builder().build());
             break;
             case 4: /* Japanese */
-                Log.i(TAG, "TextRecognizer Japanese");
+                Logger.i(TAG, "TextRecognizer Japanese");
                 mTextRecognizer = TextRecognition.getClient(new JapaneseTextRecognizerOptions.Builder().build());
             break;
         }
@@ -396,9 +395,9 @@ public class TextReader implements Handler.Callback {
     @Override
     public boolean handleMessage(@NonNull final Message msg) {
         if (msg.what == MSG_SPEAK) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "handleMessage: MSG_SPEAK");
+            if (BuildConfig.DEBUG) Logger.d(TAG, "handleMessage: MSG_SPEAK");
             if (mTtsStarting && !mTtsReady && !mIsDestroyed) {
-                if (BuildConfig.DEBUG) Log.d(TAG, "handleMessage: MSG_SPEAK tts not ready");
+                if (BuildConfig.DEBUG) Logger.d(TAG, "handleMessage: MSG_SPEAK tts not ready");
                 mMainHandler.sendEmptyMessageDelayed(MSG_SPEAK, 250);
             }
             if (mTtsReady && !mIsDestroyed) {
@@ -410,7 +409,7 @@ public class TextReader implements Handler.Callback {
     }
 
     public void stop() {
-        if (BuildConfig.DEBUG) Log.d(TAG, "stop");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "stop");
         mMainHandler.removeMessages(MSG_SPEAK);
         mBackgroundHandler.removeCallbacksAndMessages(null);
         if (mTextRecognizer != null) {
@@ -430,7 +429,7 @@ public class TextReader implements Handler.Callback {
     }
 
     public void start() {
-        if (BuildConfig.DEBUG) Log.d(TAG, "start");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "start");
         setupTextRecognizer();
         mMainHandler.removeMessages(MSG_SPEAK);
         if (mSettingsManager.getSpeak() != 0 && !mIsDestroyed) {
@@ -491,9 +490,9 @@ public class TextReader implements Handler.Callback {
             }
 
         } catch (Exception e) {
-            Log.e(TAG, "getClippedBitmap: failed exception=" + e);
+            Logger.e(TAG, "getClippedBitmap: failed: " + e);
         } catch (OutOfMemoryError oom) {
-            Log.e(TAG, "getClippedBitmap: system ran out of memory decoding region", oom);
+            Logger.e(TAG, "getClippedBitmap: system ran out of memory decoding region: " + oom);
         } finally {
             try {
                 if (decoder != null) {
@@ -503,7 +502,7 @@ public class TextReader implements Handler.Callback {
                     fileInputStream.close();
                 }
             } catch (Exception e) {
-                Log.e(TAG, "getClippedBitmap: cleanup failed exception=" + e);
+                Logger.e(TAG, "getClippedBitmap: cleanup failed: " + e);
             }
         }
 
@@ -511,20 +510,20 @@ public class TextReader implements Handler.Callback {
     }
 
     public void processFile(@NonNull final Rect visibleRect, final int viewWidth, final int viewHeight, final int token) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "processFile");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "processFile");
 
         if (mIsDestroyed || token != mCurrentTaskToken || mTextRecognizer == null) {
             return;
         }
 
         if (!mFile.exists()) {
-            Log.e(TAG, "processFile: file does not exist");
+            Logger.e(TAG, "processFile: file does not exist");
             return;
         }
 
         final Bitmap bitmap = getClippedBitmap(visibleRect);
         if (bitmap == null) {
-            Log.e(TAG, "processFile: failed to decode image file");
+            Logger.e(TAG, "processFile: failed to decode image file");
             return;
         }
 
@@ -536,7 +535,7 @@ public class TextReader implements Handler.Callback {
                 .addOnFailureListener(new TextRecognitionFailureListener(this, bitmap, token));
 
         } catch (Exception e) {
-            Log.e(TAG, "TextRecognition: error exception=", e);
+            Logger.e(TAG, "TextRecognition: error: " + e);
             if (!bitmap.isRecycled()) {
                 bitmap.recycle();
             }

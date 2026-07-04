@@ -20,7 +20,6 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.speech.tts.TextToSpeech;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -125,7 +124,7 @@ public class TranslationManager implements ITranslationManager {
             if (manager != null) {
                 synchronized (manager) {
                     if (manager.mActiveSessionId == mSessionId) {
-                        Logger.e(TAG, "prepare: models are not downloaded " + e);
+                        Logger.e(TAG, "prepare: models are not downloaded: " + e);
                         manager.mIsReady = false;
                     }
                 }
@@ -193,7 +192,7 @@ public class TranslationManager implements ITranslationManager {
             final TextToSpeech tts = mTtsRef.get();
             if (manager != null && tts != null) {
                 if (BuildConfig.DEBUG) {
-                    Logger.d(TAG, "translate: failed: " + e.getMessage());
+                    Logger.d(TAG, "translate: failed: " + e);
                 }
                 manager.setTtsLanguage(mSourceId, tts);
                 if (!mHashMap.containsKey(mTextId)) {
@@ -319,7 +318,7 @@ public class TranslationManager implements ITranslationManager {
                     Logger.i(TAG, "setTtsLanguage: success: " + locale.getDisplayName());
                 }
             } catch (ActivityNotFoundException e) {
-                Logger.e(TAG, "setTtsLanguage: engine installation activity missing " + e);
+                Logger.e(TAG, "setTtsLanguage: engine installation activity missing: " + e);
             }
         }
     }

@@ -23,7 +23,6 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -66,7 +65,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             }
         }
         if (!isGooglePlayDevice(getContext())) {
-            Log.i(TAG, "onCreatePreference: not Google Play device");
+            Logger.i(TAG, "onCreatePreference: not Google Play device");
             final ListPreference sourcePreference = findPreference("source_setting");
             final ListPreference destPreference = findPreference("dest_setting");
             if (sourcePreference != null) {
@@ -164,7 +163,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 }
             }
         } catch (Exception e) {
-            Log.w(TAG, "Error checking flash adjustability", e);
+            Logger.w(TAG, "Error checking flash adjustability: " + e);
         }
 
         return false;

@@ -32,7 +32,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -129,14 +128,14 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (BuildConfig.DEBUG) Log.d(TAG, "onClick");
+                if (BuildConfig.DEBUG) Logger.d(TAG, "onClick");
                 onToggleMode();
             }
         });
         mImageView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                if (BuildConfig.DEBUG) Log.d(TAG, "onLongClick");
+                if (BuildConfig.DEBUG) Logger.d(TAG, "onLongClick");
                 mTextReader.stop();
                 mTextReaderOverlay.showCopyright(false);
                 mTextReaderOverlay.clearOverlay();
@@ -154,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     @Override
     protected void onPause() {
         super.onPause();
-        if (BuildConfig.DEBUG) Log.d(TAG, "onPause");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onPause");
         mTextReader.stop();
         mToastManager.cancel();
     }
@@ -162,7 +161,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     @Override
     protected void onResume() {
         super.onResume();
-        if (BuildConfig.DEBUG) Log.d(TAG, "onResume");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onResume");
 
         mSettingsManager.reload();
         mTextReader.start();
@@ -205,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                 photoFile.delete();
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error deleting cached photo", e);
+            Logger.e(TAG, "Error deleting cached photo: " + e);
         }
         super.onDestroy();
     }
@@ -224,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     public void onScale(final float scale, boolean finished) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onScale " + scale);
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onScale " + scale);
         final Camera camera = mCameraManager.getCamera();
         final LiveData<ZoomState> zoomStateLiveData = camera.getCameraInfo().getZoomState();
         if (zoomStateLiveData.getValue() != null) {
@@ -726,7 +725,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
             @Override
             public void onError(@NonNull ImageCaptureException e) {
-                Log.e(TAG, "Photo capture failed", e);
+                Logger.e(TAG, "Photo capture failed: " + e);
                 mIsProcessing = false;
             }
         });

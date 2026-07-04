@@ -18,7 +18,6 @@
 package io.uglydog.magnifier;
 
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.ScaleGestureDetector;
 
 import androidx.annotation.NonNull;
@@ -39,7 +38,7 @@ public class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureList
 
     @Override
     public boolean onScaleBegin(@NonNull ScaleGestureDetector detector) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onScaleBegin");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onScaleBegin");
         mTime = 0;
         mScale = 1.0f;
         return true;
@@ -48,7 +47,7 @@ public class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureList
     @Override
     public boolean onScale(@NonNull ScaleGestureDetector detector) {
         final float scale = detector.getScaleFactor();
-        if (BuildConfig.DEBUG) Log.d(TAG, "onScale " + scale);
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onScale " + scale);
         final long current = SystemClock.uptimeMillis();
         final long delay = current - mTime;
         mScale *= scale;
@@ -62,7 +61,7 @@ public class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureList
 
     @Override
     public void onScaleEnd(@NonNull ScaleGestureDetector detector) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onScaleEnd");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onScaleEnd");
         mActions.onScale(mScale, true);
         super.onScaleEnd(detector);
     }

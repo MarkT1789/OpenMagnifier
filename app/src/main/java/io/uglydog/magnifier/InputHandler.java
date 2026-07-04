@@ -18,7 +18,6 @@
 package io.uglydog.magnifier;
 
 import android.view.KeyEvent;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -47,7 +46,7 @@ public class InputHandler {
         final boolean isFirstKeyDown = isKeyDown && event.getRepeatCount() == 0;
 
         if (isFirstKeyDown) {
-            if (BuildConfig.DEBUG) Log.d(TAG, "handleKey: " + KeyEvent.keyCodeToString(event.getKeyCode()));
+            if (BuildConfig.DEBUG) Logger.d(TAG, "handleKey: " + KeyEvent.keyCodeToString(event.getKeyCode()));
         }
 
         switch (event.getKeyCode()) {

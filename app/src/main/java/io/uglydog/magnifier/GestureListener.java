@@ -17,7 +17,6 @@
 
 package io.uglydog.magnifier;
 
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
@@ -40,20 +39,20 @@ public class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
     @Override
     public boolean onSingleTapConfirmed(@NonNull final MotionEvent event) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onSingleTapConfirmed");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onSingleTapConfirmed");
         return mActions.onToggleMode();
     }
 
     @Override
     public boolean onDoubleTap(@NonNull final MotionEvent event) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onDoubleTap");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onDoubleTap");
         mActions.onOpenSettings();
         return true;
     }
 
     @Override
     public void onLongPress(@NonNull final MotionEvent event) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onLongPress");
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onLongPress");
         mActions.onShowHelp();
     }
 }

@@ -18,7 +18,6 @@
 package io.uglydog.magnifier;
 
 import android.hardware.camera2.CaptureRequest;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,6 +39,8 @@ import java.util.concurrent.ExecutionException;
 
 @ExperimentalCamera2Interop
 public class CameraManager {
+    private static final String TAG = CameraManager.class.getSimpleName();
+
     private final AppCompatActivity mActivity;
     private final PreviewView mViewFinder;
     private ImageCapture mImageCapture;
@@ -66,7 +67,7 @@ public class CameraManager {
                     bindUseCases(cameraProvider);
                     listener.onCameraReady(mCamera);
                 } catch (ExecutionException | InterruptedException e) {
-                    Log.e("CameraManager", "Camera initialization failed", e);
+                    Logger.e(TAG, "Camera initialization failed: " + e);
                 }
             }
         }, ContextCompat.getMainExecutor(mActivity));
@@ -112,7 +113,7 @@ public class CameraManager {
                 // This ensures the camera hardware is released immediately
                 mCamera = null;
             } catch (ExecutionException | InterruptedException e) {
-                Log.e("CameraManager", "Error stopping camera", e);
+                Logger.e(TAG, "Error stopping camera: " + e);
             }
         }, ContextCompat.getMainExecutor(mActivity));
     }
