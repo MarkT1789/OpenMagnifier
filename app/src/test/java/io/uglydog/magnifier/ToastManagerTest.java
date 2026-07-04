@@ -29,8 +29,8 @@ public class ToastManagerTest {
     @Mock Context mockContext;
     @Mock Context mockAppContext;
     @Mock ToastManager.ToastFactory mockFactory;
-    @Mock IToast mockToast1;
-    @Mock IToast mockToast2;
+    @Mock IToastManager mockToast1;
+    @Mock IToastManager mockToast2;
 
     private ToastManager toastManager;
 

@@ -70,7 +70,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         Log.i(TAG, "onCreate: shared activity");
 
         setupWindow();
-        mToastManager = new ToastManager(new AndroidToastFactory());
+        mToastManager = new ToastManager(new AndroidToastManagerFactory());
 
         mImageView = findViewById(R.id.ivLastCapture);
         if (mImageView == null) {

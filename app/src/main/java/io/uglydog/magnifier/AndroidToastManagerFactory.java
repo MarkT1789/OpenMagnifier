@@ -17,7 +17,24 @@
 
 package io.uglydog.magnifier;
 
-public interface IToast {
-    void show();
-    void cancel();
+import android.content.Context;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
+public class AndroidToastManagerFactory implements ToastManager.ToastFactory {
+    @Override
+    public IToastManager create(@NonNull Context context, @NonNull String msg, int duration) {
+        final Toast mToast = Toast.makeText(context, msg, duration);
+        return new IToastManager() {
+            @Override
+            public void show() {
+                mToast.show();
+            }
+            @Override
+            public void cancel() {
+                mToast.cancel();
+            }
+        };
+    }
 }

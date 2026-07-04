@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
         setupWindow();
 
-        mToastManager = new ToastManager(new AndroidToastFactory());
+        mToastManager = new ToastManager(new AndroidToastManagerFactory());
         mImageView = findViewById(R.id.ivLastCapture);
         mImageView.setMinimumScaleType(SubsamplingScaleImageView.SCALE_TYPE_CENTER_CROP);
 
