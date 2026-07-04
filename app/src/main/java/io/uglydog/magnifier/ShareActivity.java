@@ -238,7 +238,8 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
                         if (isFinishing() || isDestroyed()) return;
 
                         if (success) {
-                            mTextReader = new TextReader(ShareActivity.this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, mToastManager);
+                           ITranslationManager translationManager = new AndroidTranslationManagerFactory().create(ShareActivity.this, mTextReaderOverlay, mToastManager);
+                            mTextReader = new TextReader(ShareActivity.this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, translationManager);
                             mImageView.setImage(ImageSource.uri(Uri.fromFile(new File(getCacheDir(), FILE))));
                             mTextReader.start();
                         } else {

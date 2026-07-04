@@ -74,7 +74,7 @@ public class TextReader implements Handler.Callback {
     private final Context mContext;
 
     private TextRecognizer mTextRecognizer;
-    private TranslationManager mTranslationManager;
+    private final ITranslationManager mTranslationManager;
 
     private volatile boolean mTtsReady;
     private volatile boolean mIsDestroyed;
@@ -236,13 +236,13 @@ public class TextReader implements Handler.Callback {
 
     private static class TextRecognitionSuccessListener implements OnSuccessListener<Text> {
         private final WeakReference<TextReader> mReaderRef;
-        private final WeakReference<TranslationManager> mTranslationManagerRef;
+        private final WeakReference<ITranslationManager> mTranslationManagerRef;
         private final Bitmap mBitmap;
         private final int mViewWidth;
         private final int mViewHeight;
         private final int mToken;
 
-        TextRecognitionSuccessListener(final TextReader reader, final TranslationManager translationManager, final Bitmap bitmap, final int viewWidth, final int viewHeight, final int token) {
+        TextRecognitionSuccessListener(final TextReader reader, final ITranslationManager translationManager, final Bitmap bitmap, final int viewWidth, final int viewHeight, final int token) {
             mReaderRef = new WeakReference<>(reader);
             mTranslationManagerRef = new WeakReference<>(translationManager);
             mBitmap = bitmap;
@@ -254,7 +254,7 @@ public class TextReader implements Handler.Callback {
         @Override
         public void onSuccess(final Text visionText) {
             final TextReader reader = mReaderRef.get();
-            final TranslationManager translationManager = mTranslationManagerRef.get();
+            final ITranslationManager translationManager = mTranslationManagerRef.get();
             if (reader == null || translationManager == null || reader.mIsDestroyed || mToken != reader.mCurrentTaskToken || reader.mImageView == null || !reader.mImageView.isReady()) {
                 if (mBitmap != null && !mBitmap.isRecycled()) {
                     mBitmap.recycle();
@@ -323,7 +323,8 @@ public class TextReader implements Handler.Callback {
         }
     }
 
-    public TextReader(final Context context, final SubsamplingScaleImageView imageView, final TextReaderOverlay overlay, final String file, final SettingsManager settings, final ToastManager toastManager) {
+    // Constructor modified to support Dependency Injection via the interface
+    public TextReader(final Context context, final SubsamplingScaleImageView imageView, final TextReaderOverlay overlay, final String file, final SettingsManager settings, final ITranslationManager translationManager) {
         mContext = context;
         mImageView = imageView;
         mTextReaderOverlay = overlay;
@@ -333,7 +334,7 @@ public class TextReader implements Handler.Callback {
         mTtsStarting = false;
         mIsDestroyed = false;
         mTextRecognizer = null;
-        mTranslationManager = new AndroidTranslationManagerFactory().create(context, overlay, toastManager);
+        mTranslationManager = translationManager;
         mTts = null;
         mSpeak = -1;
         mHashMap = new HashMap<String, String>();
@@ -593,7 +594,9 @@ public class TextReader implements Handler.Callback {
 
         mBackgroundThread.quitSafely();
 
-        mTranslationManager.close();
+        if (mTranslationManager != null) {
+            mTranslationManager.close();
+        }
 
         if (mTextReaderOverlay != null) {
             mTextReaderOverlay.clear();

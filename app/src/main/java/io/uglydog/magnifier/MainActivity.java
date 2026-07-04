@@ -120,7 +120,8 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener(this, new AndroidSystemClock()));
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
         mTextReaderOverlay.setSettingsManager(mSettingsManager);
-        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, mToastManager);
+        ITranslationManager translationManager = new AndroidTranslationManagerFactory().create(this, mTextReaderOverlay, mToastManager);
+        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, translationManager);
 
         showSplashDialog(false);
         updateFilters();
