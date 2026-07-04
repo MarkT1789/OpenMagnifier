@@ -334,7 +334,8 @@ public class TextReader implements Handler.Callback {
         mTtsStarting = false;
         mIsDestroyed = false;
         mTextRecognizer = null;
-        mTranslationManager = new TranslationManager(context, overlay, toastManager);
+        //mTranslationManager = new TranslationManager(context, overlay, toastManager);
+        mTranslationManager = new AndroidTranslationFactory().create(context, overlay, toastManager);
         mTts = null;
         mSpeak = -1;
         mHashMap = new HashMap<String, String>();

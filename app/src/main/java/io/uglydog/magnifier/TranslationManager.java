@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package io.uglydog.magnifier;
 
 import android.content.ActivityNotFoundException;
@@ -39,9 +38,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
-public class TranslationManager {
+public class TranslationManager implements ITranslationManager {
 
     private static final String TAG = TranslationManager.class.getSimpleName();
+
+    public interface TranslatorProvider {
+        Translator getClient(TranslatorOptions options);
+    }
+
+    public interface TranslationFactory {
+        TranslationManager create(@NonNull Context context, TextReaderOverlay overlay, ToastManager toastManager);
+    }
 
     @Nullable
     private Translator mTranslator;
@@ -53,13 +60,26 @@ public class TranslationManager {
     private final Context mContext;
     private final TextReaderOverlay mTextReaderOverlay;
     private final ToastManager mToastManager;
+    private final TranslatorProvider mTranslatorProvider;
 
     private long mActiveSessionId = 0;
 
+    // Production Constructor
     public TranslationManager(final Context context, TextReaderOverlay overlay, ToastManager toastManager) {
+        this(context, overlay, toastManager, new TranslatorProvider() {
+            @Override
+            public Translator getClient(TranslatorOptions options) {
+                return Translation.getClient(options);
+            }
+        });
+    }
+
+    // Dependency Injection / Testing Constructor
+    public TranslationManager(final Context context, TextReaderOverlay overlay, ToastManager toastManager, TranslatorProvider translatorProvider) {
         mContext = context.getApplicationContext();
         mTextReaderOverlay = overlay;
         mToastManager = toastManager;
+        mTranslatorProvider = translatorProvider;
         reset();
     }
 
@@ -68,7 +88,7 @@ public class TranslationManager {
         private final long mSessionId;
 
         ModelDownloadSuccessListener(TranslationManager manager, long sessionId) {
-            mManagerRef = new WeakReference<>(manager);
+            mManagerRef = new WeakReference<TranslationManager>(manager);
             mSessionId = sessionId;
         }
 
@@ -78,7 +98,7 @@ public class TranslationManager {
             if (manager != null) {
                 synchronized (manager) {
                     if (manager.mActiveSessionId == mSessionId) {
-                        Log.i(TAG, "prepare: models are downloaded and ready");
+                        Logger.i(TAG, "prepare: models are downloaded and ready");
                         manager.mIsReady = true;
                         if (manager.mIsDownloading) {
                             manager.mToastManager.show(manager.mContext, manager.mContext.getString(R.string.toast_translation_downloaded));
@@ -95,7 +115,7 @@ public class TranslationManager {
         private final long mSessionId;
 
         ModelDownloadFailureListener(TranslationManager manager, long sessionId) {
-            mManagerRef = new WeakReference<>(manager);
+            mManagerRef = new WeakReference<TranslationManager>(manager);
             mSessionId = sessionId;
         }
 
@@ -105,7 +125,7 @@ public class TranslationManager {
             if (manager != null) {
                 synchronized (manager) {
                     if (manager.mActiveSessionId == mSessionId) {
-                        Log.e(TAG, "prepare: models are not downloaded", e);
+                        Logger.e(TAG, "prepare: models are not downloaded " + e);
                         manager.mIsReady = false;
                     }
                 }
@@ -122,8 +142,8 @@ public class TranslationManager {
         private final ArrayList<String> mArrayList;
 
         TranslationSuccessListener(TranslationManager manager, TextToSpeech tts, HashMap<String, String> hashMap, ArrayList<String> arrayList, String textId, int targetId) {
-            mManagerRef = new WeakReference<>(manager);
-            mTtsRef = new WeakReference<>(tts);
+            mManagerRef = new WeakReference<TranslationManager>(manager);
+            mTtsRef = new WeakReference<TextToSpeech>(tts);
             mHashMap = hashMap;
             mArrayList = arrayList;
             mTextId = textId;
@@ -136,7 +156,7 @@ public class TranslationManager {
             final TextToSpeech tts = mTtsRef.get();
             if (manager != null && tts != null) {
                 if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "translate: success: " + translatedText);
+                    Logger.d(TAG, "translate: success: " + translatedText);
                 }
                 manager.setTtsLanguage(mTargetId, tts);
                 if (!mHashMap.containsKey(mTextId)) {
@@ -158,8 +178,8 @@ public class TranslationManager {
         private final ArrayList<String> mArrayList;
 
         TranslationFailureListener(TranslationManager manager, TextToSpeech tts, HashMap<String, String> hashMap, ArrayList<String> arrayList, String originalText, String textId, int sourceId) {
-            mManagerRef = new WeakReference<>(manager);
-            mTtsRef = new WeakReference<>(tts);
+            mManagerRef = new WeakReference<TranslationManager>(manager);
+            mTtsRef = new WeakReference<TextToSpeech>(tts);
             mHashMap = hashMap;
             mArrayList = arrayList;
             mOriginalText = originalText;
@@ -173,7 +193,7 @@ public class TranslationManager {
             final TextToSpeech tts = mTtsRef.get();
             if (manager != null && tts != null) {
                 if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "translate: failed: " + e.getMessage());
+                    Logger.d(TAG, "translate: failed: " + e.getMessage());
                 }
                 manager.setTtsLanguage(mSourceId, tts);
                 if (!mHashMap.containsKey(mTextId)) {
@@ -185,9 +205,10 @@ public class TranslationManager {
         }
     }
 
+    @Override
     public synchronized void prepare(final int sourceId, final int targetId) {
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "prepare: source=" + sourceId + " targetId=" + targetId);
+            Logger.d(TAG, "prepare: source=" + sourceId + " targetId=" + targetId);
         }
 
         if (sourceId == targetId || sourceId == 0 || targetId == 0) {
@@ -203,7 +224,7 @@ public class TranslationManager {
         final String targetStr = getTranslationString(targetId);
 
         if (sourceStr == null || targetStr == null) {
-            Log.e(TAG, "prepare: cancelled");
+            Logger.e(TAG, "prepare: cancelled");
             close();
             return;
         }
@@ -223,7 +244,7 @@ public class TranslationManager {
                 .setTargetLanguage(targetStr)
                 .build();
 
-        mTranslator = Translation.getClient(options);
+        mTranslator = mTranslatorProvider.getClient(options);
 
         final DownloadConditions conditions = new DownloadConditions.Builder()
                 .build();
@@ -233,10 +254,11 @@ public class TranslationManager {
                 .addOnFailureListener(new ModelDownloadFailureListener(this, mActiveSessionId));
     }
 
+    @Override
     public synchronized void translate(@NonNull final TextToSpeech tts, @NonNull final HashMap<String, String> hashMap, final ArrayList<String> arrayList, @NonNull final String text, @NonNull final String id) {
         if (!mIsReady || mTranslator == null) {
             if (BuildConfig.DEBUG) {
-                Log.d(TAG, "translate: not ready: " + text);
+                Logger.d(TAG, "translate: not ready: " + text);
             }
             setTtsLanguage(0, tts);
             if (!hashMap.containsKey(id)) {
@@ -260,6 +282,7 @@ public class TranslationManager {
                 .addOnFailureListener(new TranslationFailureListener(this, tts, hashMap, arrayList, text, id, mSourceId));
     }
 
+    @Override
     public synchronized void close() {
         if (mTranslator != null) {
             mTranslator.close();
@@ -293,10 +316,10 @@ public class TranslationManager {
                     intent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
                     mContext.startActivity(intent);
                 } else {
-                    Log.i(TAG, "setTtsLanguage: success: " + locale.getDisplayName());
+                    Logger.i(TAG, "setTtsLanguage: success: " + locale.getDisplayName());
                 }
             } catch (ActivityNotFoundException e) {
-                Log.e(TAG, "setTtsLanguage: engine installation activity missing", e);
+                Logger.e(TAG, "setTtsLanguage: engine installation activity missing " + e);
             }
         }
     }
@@ -319,7 +342,7 @@ public class TranslationManager {
             case 13: return TranslateLanguage.ARABIC;
             case 14: return TranslateLanguage.URDU;
             default:
-                Log.e(TAG, "getTranslationString: error: " + index);
+                Logger.e(TAG, "getTranslationString: error: " + index);
                 return null;
         }
     }
@@ -343,7 +366,7 @@ public class TranslationManager {
             case 13: return new Locale("ar");
             case 14: return new Locale("ur");
             default:
-                Log.e(TAG, "getTtsLocale: error: " + index);
+                Logger.e(TAG, "getTtsLocale: error: " + index);
                 return null;
         }
     }

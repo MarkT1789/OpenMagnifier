@@ -26,6 +26,14 @@ public class Logger {
         }
     }
 
+    public static void i(String tag, String message) {
+        try {
+            android.util.Log.i(tag, message);
+        } catch (RuntimeException e) {
+            System.out.println("[" + tag + "] INFO: " + message);
+        }
+    }
+
     public static void e(String tag, String message) {
         try {
             android.util.Log.e(tag, message);
