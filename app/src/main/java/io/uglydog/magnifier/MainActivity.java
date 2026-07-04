@@ -98,6 +98,14 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     private static final int FLASHLIGHT_OFF_TIMEOUT = 2000;
     private static final int IMAGE_OFF_TIMEOUT = 750;
 
+    // --- Dependency Injection Fields ---
+    private ITranslationManager mTranslationManager;
+
+    // Setter for Unit Testing
+    public void setTranslationManager(ITranslationManager translationManager) {
+        this.mTranslationManager = translationManager;
+    }
+
     /*
      * Lifecycle
      */
@@ -118,10 +126,16 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mCameraManager = new CameraManager(this, findViewById(R.id.viewFinder));
         mGestureDetector = new GestureDetector(this, new GestureListener(this));
         mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener(this, new AndroidSystemClock()));
+
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
         mTextReaderOverlay.setSettingsManager(mSettingsManager);
-        ITranslationManager translationManager = new AndroidTranslationManagerFactory().create(this, mTextReaderOverlay, mToastManager);
-        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, translationManager);
+
+        // DI Fallback: Initialize default dependency if not injected by a test
+        if (mTranslationManager == null) {
+            mTranslationManager = new TranslationManager(this, mTextReaderOverlay, mToastManager);
+        }
+
+        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, mTranslationManager);
 
         showSplashDialog(false);
         updateFilters();
@@ -705,7 +719,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                             }
                         });
 
-                        mImageView.setRegionDecoderFactory(new DecoderFactory<>() {
+                        mImageView.setRegionDecoderFactory(new DecoderFactory<ImageRegionDecoder>() {
                             @NonNull
                             @Override
                             public ImageRegionDecoder make() {
