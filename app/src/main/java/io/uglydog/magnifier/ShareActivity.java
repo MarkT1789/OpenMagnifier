@@ -30,6 +30,7 @@ import android.view.WindowManager;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -59,7 +60,18 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     private TextReaderOverlay mTextReaderOverlay;
     private ToastManager mToastManager;
 
+    // Dependency Injection: Default instance that can be swapped out in unit tests
+    private TranslationManager.TranslationFactory mTranslationFactory = new AndroidTranslationManagerFactory();
+
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
+
+    /**
+     * Set a custom or mock factory for testing purposes.
+     */
+    @VisibleForTesting
+    public void setTranslationFactory(TranslationManager.TranslationFactory factory) {
+        this.mTranslationFactory = factory;
+    }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -168,25 +180,6 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (BuildConfig.DEBUG) Logger.d(TAG, "onResume");
-
-        if (isFinishing() || isDestroyed()) {
-            return;
-        }
-
-        if (mSettingsManager != null) {
-            mSettingsManager.reload();
-        }
-
-        if (mTextReader != null) {
-            mTextReader.start();
-        }
-    }
-
-    @Override
     protected void onDestroy() {
         mExecutorService.shutdown();
 
@@ -214,6 +207,25 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         super.onDestroy();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (BuildConfig.DEBUG) Logger.d(TAG, "onResume");
+
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+
+        if (mSettingsManager != null) {
+            mSettingsManager.reload();
+        }
+
+        if (mTextReader != null) {
+            mTextReader.start();
+        }
+    }
+
     private void handleSingleImage(@NonNull final Intent intent) {
         final Uri imageUri;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -238,7 +250,8 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
                         if (isFinishing() || isDestroyed()) return;
 
                         if (success) {
-                           ITranslationManager translationManager = new AndroidTranslationManagerFactory().create(ShareActivity.this, mTextReaderOverlay, mToastManager);
+                            // Using the injected Factory interface to decouple instantiation
+                            ITranslationManager translationManager = mTranslationFactory.create(ShareActivity.this, mTextReaderOverlay, mToastManager);
                             mTextReader = new TextReader(ShareActivity.this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, translationManager);
                             mImageView.setImage(ImageSource.uri(Uri.fromFile(new File(getCacheDir(), FILE))));
                             mTextReader.start();
