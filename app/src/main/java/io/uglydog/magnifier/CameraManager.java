@@ -30,12 +30,12 @@ import androidx.camera.core.ImageCapture;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
-import androidx.core.content.ContextCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 
 @ExperimentalCamera2Interop
 public class CameraManager {
@@ -43,6 +43,9 @@ public class CameraManager {
 
     private final AppCompatActivity mActivity;
     private final PreviewView mViewFinder;
+    private final IProcessCameraProvider mProviderWrapper;
+    private final Executor mMainExecutor;
+
     private ImageCapture mImageCapture;
     private Camera mCamera;
 
@@ -50,14 +53,21 @@ public class CameraManager {
         void onCameraReady(Camera camera);
     }
 
-    public CameraManager(@NonNull final AppCompatActivity activity, @NonNull final PreviewView viewFinder) {
+    // Constructor Injection for Dependency Injection
+    public CameraManager(
+            @NonNull final AppCompatActivity activity,
+            @NonNull final PreviewView viewFinder,
+            @NonNull final IProcessCameraProvider providerWrapper,
+            @NonNull final Executor mainExecutor) {
         mActivity = activity;
         mViewFinder = viewFinder;
+        mProviderWrapper = providerWrapper;
+        mMainExecutor = mainExecutor;
     }
 
     public void startCamera(@NonNull final OnCameraReadyListener listener) {
         final ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
-                ProcessCameraProvider.getInstance(mActivity);
+                mProviderWrapper.getInstance(mActivity);
 
         cameraProviderFuture.addListener(new Runnable() {
             @Override
@@ -70,7 +80,7 @@ public class CameraManager {
                     Logger.e(TAG, "Camera initialization failed: " + e);
                 }
             }
-        }, ContextCompat.getMainExecutor(mActivity));
+        }, mMainExecutor);
     }
 
     private void bindUseCases(@NonNull final ProcessCameraProvider cameraProvider) {
@@ -95,7 +105,7 @@ public class CameraManager {
     public void takePhoto(@NonNull final File file, @NonNull final ImageCapture.OnImageSavedCallback callback) {
         if (mImageCapture == null) return;
         final ImageCapture.OutputFileOptions options = new ImageCapture.OutputFileOptions.Builder(file).build();
-        mImageCapture.takePicture(options, ContextCompat.getMainExecutor(mActivity), callback);
+        mImageCapture.takePicture(options, mMainExecutor, callback);
     }
 
     public Camera getCamera() {
@@ -104,17 +114,19 @@ public class CameraManager {
 
     public void stopCamera() {
         final ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
-                ProcessCameraProvider.getInstance(mActivity);
+                mProviderWrapper.getInstance(mActivity);
 
-        cameraProviderFuture.addListener(() -> {
-            try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                cameraProvider.unbindAll();
-                // This ensures the camera hardware is released immediately
-                mCamera = null;
-            } catch (ExecutionException | InterruptedException e) {
-                Logger.e(TAG, "Error stopping camera: " + e);
+        cameraProviderFuture.addListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                    cameraProvider.unbindAll();
+                    mCamera = null;
+                } catch (ExecutionException | InterruptedException e) {
+                    Logger.e(TAG, "Error stopping camera: " + e);
+                }
             }
-        }, ContextCompat.getMainExecutor(mActivity));
+        }, mMainExecutor);
     }
 }
