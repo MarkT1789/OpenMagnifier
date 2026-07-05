@@ -18,11 +18,11 @@
 package io.uglydog.magnifier;
 
 import android.view.KeyEvent;
-
 import androidx.annotation.NonNull;
 
 public class InputHandler {
     private static final String TAG = InputHandler.class.getSimpleName();
+    private final IKeyEvent keyFormatter;
 
     public interface InputActions {
         void onChangeBrightnessSetting(KeyEvent event);
@@ -40,13 +40,29 @@ public class InputHandler {
         void onShowVersion();
     }
 
-    public static boolean handleKey(@NonNull final KeyEvent event, @NonNull final InputActions actions) {
+    // Constructor Injection for Testing
+    public InputHandler(@NonNull IKeyEvent keyFormatter) {
+        this.keyFormatter = keyFormatter;
+    }
+
+    // Factory method for production convenience
+    public static InputHandler createProductionHandler() {
+        return new InputHandler(new IKeyEvent() {
+            @Override
+            public String getKeyCodeString(KeyEvent event) {
+                return KeyEvent.keyCodeToString(event.getKeyCode());
+            }
+        });
+    }
+
+    public boolean handleKey(@NonNull final KeyEvent event, @NonNull final InputActions actions) {
 
         final boolean isKeyDown = event.getAction() == KeyEvent.ACTION_DOWN;
         final boolean isFirstKeyDown = isKeyDown && event.getRepeatCount() == 0;
 
         if (isFirstKeyDown) {
-            if (BuildConfig.DEBUG) Logger.d(TAG, "handleKey: " + KeyEvent.keyCodeToString(event.getKeyCode()));
+            // Uses the injected formatter instead of the static Android method directly
+            Logger.d(TAG, "handleKey: " + keyFormatter.getKeyCodeString(event));
         }
 
         switch (event.getKeyCode()) {

@@ -59,6 +59,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     private TextReader mTextReader;
     private TextReaderOverlay mTextReaderOverlay;
     private ToastManager mToastManager;
+    private InputHandler mInputHandler;
 
     // Dependency Injection: Default instance that can be swapped out in unit tests
     private TranslationManager.TranslationFactory mTranslationFactory = new AndroidTranslationManagerFactory();
@@ -122,6 +123,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
             finish();
             return;
         }
+        mInputHandler = InputHandler.createProductionHandler();
 
         handleIntent(getIntent());
     }
@@ -323,7 +325,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
 
     @Override
     public boolean onKeyDown(final int keyCode, @NonNull final KeyEvent event) {
-        if (InputHandler.handleKey(event, this)) {
+        if (mInputHandler.handleKey(event, this)) {
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -331,7 +333,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
 
     @Override
     public boolean onKeyUp(final int keyCode, @NonNull final KeyEvent event) {
-        if (InputHandler.handleKey(event, this)) {
+        if (mInputHandler.handleKey(event, this)) {
             return true;
         }
         return super.onKeyUp(keyCode, event);

@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     private final Paint mFilterPaint = new Paint();
     private final ColorMatrix mColorMatrix = new ColorMatrix();
     private final ColorMatrix mGrayscaleMatrix = new ColorMatrix();
+    private final InputHandler mInputHandler = InputHandler.createProductionHandler();
 
     private final Handler mHandler = new Handler(Looper.getMainLooper(), this);
     private boolean mIsProcessing = false;
@@ -586,7 +587,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     public boolean onKeyDown(final int keyCode, @NonNull final KeyEvent event) {
-        if (InputHandler.handleKey(event, this)) {
+        if (mInputHandler.handleKey(event, this)) {
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -594,7 +595,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     public boolean onKeyUp(final int keyCode, @NonNull final KeyEvent event) {
-        if (InputHandler.handleKey(event, this)) {
+        if (mInputHandler.handleKey(event, this)) {
             return true;
         }
         return super.onKeyUp(keyCode, event);
