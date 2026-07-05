@@ -17,11 +17,6 @@
 
 package io.uglydog.magnifier;
 
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,9 +30,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.preference.ListPreference;
 import androidx.preference.PreferenceFragmentCompat;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,35 +37,28 @@ import java.util.List;
 public class SettingsFragment extends PreferenceFragmentCompat {
     private static final String TAG = SettingsFragment.class.getSimpleName();
 
+    // Inject the helper via the factory
+    private final ISettingsHelper settingsHelper = AndroidSettingsFragmentFactory.getSettingsHelper();
+
     @Override
     public void onCreatePreferences(final Bundle savedInstanceState, final String rootKey) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey);
 
-        final PackageManager pm = requireContext().getPackageManager();
-        final boolean hasFlash = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
-
         final ListPreference flashlightPreference = findPreference("flashlight_setting");
-        if (flashlightPreference == null) {
-            return;
-        }
-        if (!hasFlash) {
-            flashlightPreference.setEnabled(false);
-        } else {
-            if (!isFlashAdjustable(getContext())) {
-                int[] entries = {4, 3, 2, 1};
-                deleteEntries(flashlightPreference, entries);
+        if (flashlightPreference != null) {
+            if (!settingsHelper.hasFlash(requireContext())) {
+                flashlightPreference.setEnabled(false);
+            } else if (!settingsHelper.isFlashAdjustable(requireContext())) {
+                deleteEntries(flashlightPreference, new int[]{4, 3, 2, 1});
             }
         }
-        if (!isGooglePlayDevice(getContext())) {
+
+        if (!settingsHelper.isGooglePlayDevice(requireContext())) {
             Logger.i(TAG, "onCreatePreference: not Google Play device");
             final ListPreference sourcePreference = findPreference("source_setting");
             final ListPreference destPreference = findPreference("dest_setting");
-            if (sourcePreference != null) {
-                sourcePreference.setEnabled(false);
-            }
-            if (destPreference != null) {
-                destPreference.setEnabled(false);
-            }
+            if (sourcePreference != null) sourcePreference.setEnabled(false);
+            if (destPreference != null) destPreference.setEnabled(false);
         }
     }
 
@@ -131,48 +116,5 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 listPreference.setValue(entryValues.get(0).toString());
             }
         }
-    }
-
-    private boolean isFlashAdjustable(final Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            return false;
-        }
-
-        try {
-            final CameraManager cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-            if (cameraManager == null) {
-                return false;
-            }
-
-            for (final String cameraId : cameraManager.getCameraIdList()) {
-                final CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
-
-                final Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                if (facing == null || facing != CameraCharacteristics.LENS_FACING_BACK) {
-                    continue;
-                }
-
-                final Boolean hasFlash = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-                if (hasFlash == null || !hasFlash) {
-                    continue;
-                }
-
-                final Integer maxStrength = characteristics.get(CameraCharacteristics.FLASH_INFO_STRENGTH_MAXIMUM_LEVEL);
-                if (maxStrength != null && maxStrength > 1) {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            Logger.w(TAG, "Error checking flash adjustability: " + e);
-        }
-
-        return false;
-    }
-
-    private boolean isGooglePlayDevice(final Context context) {
-        final GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        final int resultCode = apiAvailability.isGooglePlayServicesAvailable(context);
-
-        return resultCode == ConnectionResult.SUCCESS;
     }
 }
