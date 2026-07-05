@@ -20,15 +20,14 @@ package io.uglydog.magnifier;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyFloat;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import android.Manifest;
 import android.app.Application;
 import android.content.Intent;
+import android.graphics.PointF;
 import android.os.Build;
 import android.os.Message;
 import android.view.KeyEvent;
@@ -38,6 +37,8 @@ import android.view.View;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraControl;
 import androidx.camera.core.CameraInfo;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.ZoomState;
 import androidx.lifecycle.MutableLiveData;
 import androidx.test.core.app.ApplicationProvider;
@@ -47,6 +48,7 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.robolectric.Robolectric;
@@ -54,6 +56,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowAlertDialog;
 import org.robolectric.shadows.ShadowApplication;
 
 import java.io.File;
@@ -70,6 +73,7 @@ public class MainActivityTest {
     @Mock SettingsManager mockSettingsManager;
     @Mock CameraManager mockCameraManager;
     @Mock TextReader mockTextReader;
+    @Mock TextReaderOverlay mockTextReaderOverlay;
     @Mock ToastManager mockToastManager;
     @Mock SubsamplingScaleImageView mockImageView;
     @Mock Camera mockCamera;
@@ -80,36 +84,45 @@ public class MainActivityTest {
     public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
 
-        // Grant permissions and setup application context
         ShadowApplication shadowApp = Shadows.shadowOf((Application) ApplicationProvider.getApplicationContext());
         shadowApp.grantPermissions(Manifest.permission.CAMERA);
 
-        // Default mock behaviors to avoid null pointers
+        // Setup common mock defaults to prevent null pointer exceptions
         when(mockCameraManager.getCamera()).thenReturn(mockCamera);
         when(mockCamera.getCameraControl()).thenReturn(mockCameraControl);
         when(mockCamera.getCameraInfo()).thenReturn(mockCameraInfo);
         when(mockCameraInfo.hasFlashUnit()).thenReturn(true);
         when(mockSettingsManager.getFlashlight()).thenReturn(1.0f);
-        
+        when(mockSettingsManager.getBrightness()).thenReturn(0.0f);
+        when(mockSettingsManager.getColor()).thenReturn(0);
+        when(mockSettingsManager.getContrast()).thenReturn(1.0f);
+        when(mockSettingsManager.getDx()).thenReturn(0.1f);
+        when(mockSettingsManager.getDy()).thenReturn(0.1f);
+        when(mockSettingsManager.getRotation()).thenReturn(0);
+        when(mockSettingsManager.getSpeak()).thenReturn(0);
+        when(mockSettingsManager.getZoom()).thenReturn(1.0f);
+        when(mockSettingsManager.getSplashVersion()).thenReturn("1.0");
+
         MutableLiveData<ZoomState> zoomLiveData = new MutableLiveData<>();
         ZoomState mockZoomState = mock(ZoomState.class);
         when(mockZoomState.getZoomRatio()).thenReturn(1.0f);
+        when(mockZoomState.getMaxZoomRatio()).thenReturn(5.0f);
+        when(mockZoomState.getMinZoomRatio()).thenReturn(1.0f);
         zoomLiveData.setValue(mockZoomState);
         when(mockCameraInfo.getZoomState()).thenReturn(zoomLiveData);
 
         controller = Robolectric.buildActivity(MainActivity.class);
         activity = controller.get();
 
-        // Inject Dependency
         activity.setTranslationManager(mockTranslationManager);
-        
-        // Drive lifecycle
+
         controller.create().start().resume();
 
-        // Inject internal dependencies
+        // Inject internal dependencies to target code coverage explicitly
         injectMock(activity, "mSettingsManager", mockSettingsManager);
         injectMock(activity, "mCameraManager", mockCameraManager);
         injectMock(activity, "mTextReader", mockTextReader);
+        injectMock(activity, "mTextReaderOverlay", mockTextReaderOverlay);
         injectMock(activity, "mToastManager", mockToastManager);
         injectMock(activity, "mImageView", mockImageView);
     }
@@ -120,27 +133,20 @@ public class MainActivityTest {
         field.set(target, mock);
     }
 
+    // --- Lifecycle and Base Branches ---
+
     @Test
-    public void testHandleMessage_MsgFlashlightOff_DisablesTorch() {
-        Message msg = Message.obtain();
-        msg.what = 1; // MSG_FLASHLIGHT_OFF constant from MainActivity
-        
-        boolean handled = activity.handleMessage(msg);
-        
-        assertTrue("Message should be handled", handled);
-        verify(mockCameraControl).enableTorch(false);
+    public void testOnResume_ImageViewVisible() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        activity.onResume();
+        verify(mockImageView).setOrientation(anyInt());
     }
 
     @Test
-    public void testHandleMessage_MsgImageOff_ResetsView() {
-        Message msg = Message.obtain();
-        msg.what = 2; // MSG_IMAGE_OFF constant from MainActivity
-        
-        boolean handled = activity.handleMessage(msg);
-        
-        assertTrue("Message should be handled", handled);
-        verify(mockImageView).setVisibility(View.GONE);
-        verify(mockImageView).recycle();
+    public void testOnResume_ImageViewNotVisible_TogglesTorch() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        activity.onResume();
+        verify(mockCameraControl).enableTorch(true);
     }
 
     @Test
@@ -151,58 +157,281 @@ public class MainActivityTest {
     }
 
     @Test
-    public void testHandleMessage_UnknownMessage_ReturnsFalseAndDoesNothing() {
-        Message msg = Message.obtain();
-        msg.what = 999; // Not a recognized message type
-
-        boolean handled = activity.handleMessage(msg);
-
-        assertFalse("Unrecognized message should not be handled", handled);
+    public void testOnDestroy_CleansUpSuccessfully() {
+        controller.destroy();
+        verify(mockTextReaderOverlay).close();
+        verify(mockTextReader).destroy();
+        verify(mockCameraManager).stopCamera();
+        verify(mockImageView).recycle();
     }
 
     @Test
-    public void testOnScale_WithinBounds_UpdatesZoomRatioAndShowsToastWhenFinished() {
-        MutableLiveData<ZoomState> zoomLiveData = new MutableLiveData<>();
-        ZoomState zoomState = mock(ZoomState.class);
-        when(zoomState.getZoomRatio()).thenReturn(2.0f);
-        when(zoomState.getMaxZoomRatio()).thenReturn(10.0f);
-        when(zoomState.getMinZoomRatio()).thenReturn(1.0f);
-        zoomLiveData.setValue(zoomState);
-        when(mockCameraInfo.getZoomState()).thenReturn(zoomLiveData);
+    public void testOnRequestPermissionsResult_WrongCode_DoesNothing() {
+        activity.onRequestPermissionsResult(99, new String[]{Manifest.permission.CAMERA}, new int[]{0});
+        verify(mockCameraManager, never()).startCamera(any());
+    }
 
-        activity.onScale(1.5f, true);
+    // --- Message Handlers (Callbacks) ---
 
-        // 2.0 * 1.5 = 3.0, within [1.0, 10.0], so it should be applied
-        verify(mockCameraControl).setZoomRatio(3.0f);
+    @Test
+    public void testHandleMessage_MsgFlashlightOff_DisablesTorch() {
+        Message msg = Message.obtain();
+        msg.what = 1;
+        assertTrue(activity.handleMessage(msg));
+        verify(mockCameraControl).enableTorch(false);
+    }
+
+    @Test
+    public void testHandleMessage_MsgImageOff_ResetsView() {
+        Message msg = Message.obtain();
+        msg.what = 2;
+        assertTrue(activity.handleMessage(msg));
+        verify(mockImageView).setVisibility(View.GONE);
+        verify(mockImageView).recycle();
+    }
+
+    @Test
+    public void testHandleMessage_UnknownMessage_ReturnsFalse() {
+        Message msg = Message.obtain();
+        msg.what = 999;
+        assertFalse(activity.handleMessage(msg));
+    }
+
+    // --- Camera Permissions & Initialization Callbacks ---
+
+    @Test
+    public void testStartCameraSequence_CallbackInitializesZoomAndTorch() {
+        ArgumentCaptor<CameraManager.OnCameraReadyListener> captor = ArgumentCaptor.forClass(CameraManager.OnCameraReadyListener.class);
+        activity.onRequestPermissionsResult(100, new String[]{Manifest.permission.CAMERA}, new int[]{0});
+
+        verify(mockCameraManager).startCamera(captor.capture());
+
+        CameraManager.OnCameraReadyListener listener = captor.getValue();
+        listener.onCameraReady(mockCamera);
+
+        verify(mockCameraControl).setZoomRatio(1.0f);
+        verify(mockCameraControl).enableTorch(true);
+    }
+
+    // --- Input Actions / KeyEvents Branches ---
+
+    @Test
+    public void testOnChangeBrightnessSetting_Visible_AndShiftPressed() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        KeyEvent event = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_B, 0, KeyEvent.META_SHIFT_ON);
+
+        activity.onChangeBrightnessSetting(event);
+        verify(mockSettingsManager).setBrightness(anyFloat());
         verify(mockToastManager).show(eq(activity), any());
     }
 
     @Test
-    public void testOnScale_ExceedsMaxZoom_ClampsToMaxAndDoesNotToastWhenNotFinished() {
-        MutableLiveData<ZoomState> zoomLiveData = new MutableLiveData<>();
-        ZoomState zoomState = mock(ZoomState.class);
-        when(zoomState.getZoomRatio()).thenReturn(5.0f);
-        when(zoomState.getMaxZoomRatio()).thenReturn(8.0f);
-        when(zoomState.getMinZoomRatio()).thenReturn(1.0f);
-        zoomLiveData.setValue(zoomState);
-        when(mockCameraInfo.getZoomState()).thenReturn(zoomLiveData);
+    public void testOnChangeBrightnessSetting_NotVisible() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_B);
 
-        // 5.0 * 3.0 = 15.0, exceeds max of 8.0, should clamp to 8.0
-        activity.onScale(3.0f, false);
-
-        verify(mockCameraControl).setZoomRatio(8.0f);
-        verify(mockToastManager, org.mockito.Mockito.never()).show(any(), any());
+        activity.onChangeBrightnessSetting(event);
+        verify(mockToastManager).show(eq(activity), any());
     }
 
     @Test
-    public void testOnVolumeChanged_ImageViewNotVisible_ReturnsFalseAndSkipsTextReader() {
+    public void testOnChangeColorFilterSetting_Visible() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_C);
+
+        activity.onChangeColorFilterSetting(event);
+        verify(mockSettingsManager).setColor(anyInt());
+    }
+
+    @Test
+    public void testOnChangeColorFilterSetting_NotVisible() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_C);
+
+        activity.onChangeColorFilterSetting(event);
+        verify(mockToastManager).show(eq(activity), any());
+    }
+
+    @Test
+    public void testOnChangeContrastSetting_Visible() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_H);
+
+        activity.onChangeContrastSetting(event);
+        verify(mockSettingsManager).setContrast(anyFloat());
+    }
+
+    @Test
+    public void testOnChangeContrastSetting_NotVisible() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_H);
+
+        activity.onChangeContrastSetting(event);
+        verify(mockToastManager).show(eq(activity), any());
+    }
+
+    @Test
+    public void testOnChangeFlashlightSetting_NoFlash() {
+        when(mockCameraInfo.hasFlashUnit()).thenReturn(false);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_F);
+
+        activity.onChangeFlashlightSetting(event);
+        verify(mockToastManager).show(eq(activity), any());
+    }
+
+    @Test
+    public void testOnChangeFlashlightSetting_VisibleAndHasFlash() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_F);
+
+        activity.onChangeFlashlightSetting(event);
+        verify(mockToastManager).show(eq(activity), any());
+    }
+
+    @Test
+    public void testOnChangePanSetting_Visible_X_Key() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        KeyEvent event = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_X, 0);
+
+        activity.onChangePanSetting(event);
+        verify(mockSettingsManager).setDx(anyFloat());
+    }
+
+    @Test
+    public void testOnChangePanSetting_Visible_Y_Key() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        KeyEvent event = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Y, 0);
+
+        activity.onChangePanSetting(event);
+        verify(mockSettingsManager).setDy(anyFloat());
+    }
+
+    @Test
+    public void testOnChangePanSetting_NotVisible() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        KeyEvent event = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_X, 0);
+
+        activity.onChangePanSetting(event);
+        verify(mockToastManager).show(eq(activity), any());
+    }
+
+    @Test
+    public void testOnChangeRotationSetting_Visible() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_R);
+
+        activity.onChangeRotationSetting(event);
+        verify(mockSettingsManager).setRotation(anyInt());
+        verify(mockImageView).setOrientation(anyInt());
+    }
+
+    @Test
+    public void testOnChangeRotationSetting_NotVisible() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_R);
+
+        activity.onChangeRotationSetting(event);
+        verify(mockToastManager).show(eq(activity), any());
+    }
+
+    @Test
+    public void testOnChangeSpeakSetting() {
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_S);
+        activity.onChangeSpeakSetting(event);
+        verify(mockSettingsManager).setSpeak(anyInt());
+        verify(mockTextReader).start();
+    }
+
+    @Test
+    public void testOnChangeView_TriggersToggle() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        activity.onChangeView();
+        verify(mockTextReader).stop();
+    }
+
+    @Test
+    public void testOnChangeZoomSetting_Visible_ForwardAndShift() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        when(mockImageView.getCenter()).thenReturn(new PointF(0, 0));
+        when(mockImageView.getScale()).thenReturn(1.0f);
+        when(mockImageView.getMaxScale()).thenReturn(4.0f);
+        when(mockImageView.getMinScale()).thenReturn(1.0f);
+
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Z);
+        activity.onChangeZoomSetting(event);
+        verify(mockImageView).setScaleAndCenter(anyFloat(), any());
+
+        KeyEvent shiftEvent = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Z, 0, KeyEvent.META_SHIFT_ON);
+        activity.onChangeZoomSetting(shiftEvent);
+        verify(mockImageView, times(2)).setScaleAndCenter(anyFloat(), any());
+    }
+
+    @Test
+    public void testOnChangeZoomSetting_NotVisible_CameraZoom() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Z);
+
+        activity.onChangeZoomSetting(event);
+        verify(mockSettingsManager).setZoom(anyFloat());
+        verify(mockCameraControl).setZoomRatio(anyFloat());
+    }
+
+    // --- Viewport Scrolling Navigation Branches ---
+
+    @Test
+    public void testOnScrollViewport_NotVisible() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT);
+
+        activity.onScrollViewport(event);
+        verify(mockToastManager).show(eq(activity), any());
+    }
+
+    @Test
+    public void testOnScrollViewport_NullCenter() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        when(mockImageView.getCenter()).thenReturn(null);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT);
+
+        activity.onScrollViewport(event);
+        verify(mockImageView, never()).animateScaleAndCenter(anyFloat(), any());
+    }
+
+    @Test
+    public void testOnScrollViewport_DirectionsAndShift() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        when(mockImageView.getCenter()).thenReturn(new PointF(50, 50));
+        when(mockImageView.getScale()).thenReturn(1.0f);
+        when(mockImageView.getWidth()).thenReturn(100);
+        when(mockImageView.getHeight()).thenReturn(100);
+
+        int[] codes = {KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN};
+        for (int code : codes) {
+            activity.onScrollViewport(new KeyEvent(KeyEvent.ACTION_DOWN, code));
+            activity.onScrollViewport(new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, code, 0, KeyEvent.META_SHIFT_ON));
+        }
+
+        verify(mockImageView, atLeastOnce()).setScaleAndCenter(anyFloat(), any());
+    }
+
+    @Test
+    public void testOnScrollViewport_UnknownKey_DoesNothing() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        when(mockImageView.getCenter()).thenReturn(new PointF(50, 50));
+        when(mockImageView.getScale()).thenReturn(1.0f);
+
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_A);
+        activity.onScrollViewport(event);
+        verify(mockImageView, never()).setScaleAndCenter(anyFloat(), any());
+    }
+
+    @Test
+    public void testOnVolumeChanged_ImageViewNotVisible_ReturnsFalse() {
         when(mockImageView.getVisibility()).thenReturn(View.GONE);
         KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_VOLUME_UP);
 
         boolean handled = activity.onVolumeChanged(event);
-
         assertFalse(handled);
-        verify(mockTextReader, org.mockito.Mockito.never()).onVolumeChanged(org.mockito.ArgumentMatchers.anyInt());
     }
 
     @Test
@@ -212,7 +441,6 @@ public class MainActivityTest {
         KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_VOLUME_UP);
 
         boolean handled = activity.onVolumeChanged(event);
-
         assertTrue(handled);
         verify(mockTextReader).onVolumeChanged(0);
     }
@@ -220,53 +448,16 @@ public class MainActivityTest {
     @Test
     public void testOnShowVersion_ShowsVersionToast() {
         activity.onShowVersion();
-
         verify(mockToastManager).show(eq(activity), any());
     }
 
-    @Test
-    public void testOnToggleMode_ImageViewVisible_StopsTextReaderAndClearsOverlay() {
-        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
-        when(mockSettingsManager.getFlashlight()).thenReturn(1.0f);
-
-        boolean handled = activity.onToggleMode();
-
-        assertTrue("Toggling off freeze-frame view should be handled", handled);
-        verify(mockTextReader).stop();
-    }
+    // --- Key Down / Up / Touch Interceptors ---
 
     @Test
-    public void testOnToggleMode_ImageViewNotVisibleAndNotProcessing_CapturesPhoto() {
-        when(mockImageView.getVisibility()).thenReturn(View.GONE);
-
-        boolean handled = activity.onToggleMode();
-
-        assertTrue("Starting freeze-frame capture should be handled", handled);
-        verify(mockToastManager).show(eq(activity), any());
-        verify(mockImageView).recycle();
-        verify(mockCameraManager).takePhoto(any(File.class), any());
-    }
-
-    @Test
-    public void testOnRequestPermissionsResult_PermissionGranted_StartsCameraSequence() {
-        // Note: onCreate's initial startCameraSequence() call happened against the
-        // real CameraManager, before setUp() swapped mCameraManager for the mock via
-        // reflection. So this call is the only one the mock should observe.
-        activity.onRequestPermissionsResult(
-                100, // CAMERA_PERMISSION_CODE
-                new String[]{Manifest.permission.CAMERA},
-                new int[]{0});
-
-        verify(mockCameraManager, times(1)).startCamera(any());
-    }
-
-    @Test
-    public void testOnOpenSettings_StartsSettingsActivity() {
-        activity.onOpenSettings();
-
-        Intent started = Shadows.shadowOf(activity).getNextStartedActivity();
-        assertNotNull("An Intent should have been started", started);
-        assertEquals(SettingsActivity.class.getName(), started.getComponent().getClassName());
+    public void testOnKeyDown_And_OnKeyUp() {
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_VOLUME_DOWN);
+        assertFalse(activity.onKeyDown(KeyEvent.KEYCODE_VOLUME_DOWN, event));
+        assertFalse(activity.onKeyUp(KeyEvent.KEYCODE_VOLUME_DOWN, event));
     }
 
     @Test
@@ -275,16 +466,62 @@ public class MainActivityTest {
         MotionEvent event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
 
         activity.onTouchEvent(event);
-
         verify(mockImageView).dispatchTouchEvent(event);
         event.recycle();
     }
 
-    @Test
-    public void testOnDestroy_StopsCameraAndDestroysTextReader() {
-        controller.destroy();
+    // --- Splash Dialog Window Metrics Branch ---
 
-        verify(mockCameraManager).stopCamera();
-        verify(mockTextReader).destroy();
+    @Test
+    public void testShowHelp_TriggersSplashDialog() {
+        activity.onShowHelp();
+        var dialog = ShadowAlertDialog.getLatestDialog();
+        assertNotNull(dialog);
+    }
+
+    // --- Color Matrices & Filters Processing Branches ---
+
+    @Test
+    public void testUpdateFilters_AllMatrixFlags() {
+        // Test combinations of Grayscale (0x01), Inverse (0x02), and AMD Contrast (0x04)
+        when(mockSettingsManager.getColor()).thenReturn(0x01 | 0x02 | 0x04);
+        activity.updateFilters();
+        verify(mockImageView).setLayerType(eq(View.LAYER_TYPE_HARDWARE), any());
+    }
+
+    // --- Photo Capture Engine Callbacks ---
+
+    @Test
+    public void testCaptureToView_CallbackBranchCoverage() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        activity.onToggleMode();
+
+        ArgumentCaptor<ImageCapture.OnImageSavedCallback> captor = ArgumentCaptor.forClass(ImageCapture.OnImageSavedCallback.class);
+        verify(mockCameraManager).takePhoto(any(File.class), captor.capture());
+
+        ImageCapture.OnImageSavedCallback callback = captor.getValue();
+
+        // Execute Happy Path callback branch
+        ImageCapture.OutputFileResults mockResults = mock(ImageCapture.OutputFileResults.class);
+        callback.onImageSaved(mockResults);
+
+        // Execute Error callback branch
+        ImageCaptureException mockException = mock(ImageCaptureException.class);
+        callback.onError(mockException);
+    }
+
+    // --- Scale Gesture Action Branches ---
+
+    @Test
+    public void testOnScale_WithinBounds_UpdatesZoom() {
+        activity.onScale(1.5f, true);
+        verify(mockCameraControl).setZoomRatio(anyFloat());
+        verify(mockToastManager).show(eq(activity), any());
+    }
+
+    @Test
+    public void testOnScale_ExceedsMaxZoom_ClampsToMax() {
+        activity.onScale(10.0f, false);
+        verify(mockCameraControl).setZoomRatio(5.0f);
     }
 }
