@@ -233,8 +233,8 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
             textPaint.set(mTextPaint);
             StaticLayout staticLayout = StaticLayout.Builder.obtain(str, 0, str.length(), textPaint, width)
                     .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                    .setLineSpacing(0.0f, 1.0f)
-                    .setMaxLines(1)
+                    .setLineSpacing(4.0f, 1.0f)
+                    .setMaxLines(mSettingsManager.getBanner())
                     .setIncludePad(false)
                     .build();
 
@@ -248,7 +248,12 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
             } else {
                 canvas.translate(OFFSET, OFFSET);
             }
-            canvas.clipRect(0, mTextPaint.ascent(), width, staticLayout.getLineBottom(0));
+            if (staticLayout.getLineCount() > mSettingsManager.getBanner()) {
+                canvas.clipRect(0, mTextPaint.ascent(), width, staticLayout.getLineBottom(mSettingsManager.getBanner() - 1));
+                mCount = staticLayout.getLineEnd(mSettingsManager.getBanner() - 1);
+            } else {
+                mCount = staticLayout.getLineEnd(staticLayout.getLineCount() - 1);
+            }
             staticLayout.draw(canvas);
             canvas.restore();
         }
@@ -289,7 +294,9 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
 
     @Override
     public void updateTextSize() {
-        final float banner_size = mSettingsManager != null ? mSettingsManager.getBannerSize() : 1.0f;
+        if (mSettingsManager == null) return;
+
+        final float banner_size =  mSettingsManager.getBannerSize();
         final float pxSize = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_SP,
                 TEXT_SIZE * banner_size,
@@ -299,7 +306,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
 
         final Paint.FontMetrics metrics = mTextPaint.getFontMetrics();
         final int textHeight = (int)(metrics.descent - metrics.ascent);
-        mBackgroundHeight = textHeight + OFFSET * 2;
+        mBackgroundHeight = textHeight * mSettingsManager.getBanner() + OFFSET * 2;
     }
 
     // Package-private accessors purely to verify internal states in Unit Tests

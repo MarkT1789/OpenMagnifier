@@ -176,14 +176,19 @@
 
     <string-array name="banner_entries">
         <item>@string/entries_disabled</item>
-        <item>@string/entries_enabled</item>
+        <item>@string/entries_one_line</item>
+        <item>@string/entries_two_lines</item>
+        <item>@string/entries_three_lines</item>
     </string-array>
     <string-array name="banner_values">
         <item>0</item>
         <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </string-array>
 
     <string-array name="banner_size_entries">
+        <item>0.67x</item>
         <item>0.75x</item>
         <item>1.0x</item>
         <item>1.25x</item>
@@ -192,6 +197,7 @@
         <item>2.5x</item>
     </string-array>
     <string-array name="banner_size_values">
+        <item>0.67</item>
         <item>0.75</item>
         <item>1.0</item>
         <item>1.25</item>
