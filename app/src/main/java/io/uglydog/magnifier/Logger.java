@@ -34,13 +34,6 @@ public class Logger {
         }
     }
 
-    public static void w(final String tag, final String message) {
-        try {
-            android.util.Log.w(tag, message);
-        } catch (RuntimeException e) {
-            System.out.println("[" + tag + "] WARN: " + message);
-        }
-    }
     public static void e(final String tag, final String message) {
         try {
             android.util.Log.e(tag, message);

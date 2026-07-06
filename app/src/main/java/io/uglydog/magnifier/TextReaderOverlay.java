@@ -308,7 +308,4 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     boolean isShowBackground() { return mShowBackground; }
     String getTts() { return mTts; }
     int getStart() { return mStart; }
-    void setIsAttachedToWindow(boolean attached) {
-        // Mocking framework utility or internal reflection bypass token
-    }
 }
