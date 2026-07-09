@@ -335,19 +335,9 @@ public class TextReader implements Handler.Callback {
                         // Standard 2D Rotation Matrix formulas
                         final double rotatedY1 = cx1 * sinTheta + cy1 * cosTheta;
                         final double rotatedY2 = cx2 * sinTheta + cy2 * cosTheta;
-                        final double rotatedX1 = cx1 * cosTheta - cy1 * sinTheta;
-                        final double rotatedX2 = cx2 * cosTheta - cy2 * sinTheta;
 
-                        // Define a dynamic vertical threshold based on block height
-                        final double threshold = Math.max(r1.height(), r2.height()) * 0.5;
-
-                        if (Math.abs(rotatedY1 - rotatedY2) > threshold) {
-                            // Sort Top to Bottom on the newly leveled plane
-                            return Double.compare(rotatedY1, rotatedY2);
-                        } else {
-                            // Sort Left to Right on the newly leveled plane
-                            return Double.compare(rotatedX1, rotatedX2);
-                        }
+                        // Sort Top to Bottom on the newly leveled plane
+                        return Double.compare(rotatedY1, rotatedY2);
                     }
                 });
 
