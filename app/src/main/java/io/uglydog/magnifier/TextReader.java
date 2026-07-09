@@ -20,6 +20,7 @@ package io.uglydog.magnifier;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapRegionDecoder;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.os.Handler;
@@ -52,7 +53,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 
 public class TextReader implements Handler.Callback {
@@ -267,7 +270,88 @@ public class TextReader implements Handler.Callback {
                 final float scaleX = (float) mViewWidth / mBitmap.getWidth();
                 final float scaleY = (float) mViewHeight / mBitmap.getHeight();
 
-                for (Text.TextBlock block : visionText.getTextBlocks()) {
+                List<Text.TextBlock> blocks = new ArrayList<>(visionText.getTextBlocks());
+
+                // 1. Calculate the global skew angle using internal lines
+                double totalAngle = 0;
+                int lineCount = 0;
+
+                for (Text.TextBlock block : blocks) {
+                    if (block == null) {
+                        continue;
+                    }
+                    for (Text.Line line : block.getLines()) {
+                        if (line == null) {
+                            continue;
+                        }
+                        final Point[] points = line.getCornerPoints();
+                        if (points != null && points.length >= 2) {
+                            final double deltaX = points[1].x - points[0].x;
+                            final double deltaY = points[1].y - points[0].y;
+                            totalAngle += Math.atan2(deltaY, deltaX);
+                            lineCount++;
+                        }
+                    }
+                }
+
+                // Average skew angle in radians
+                final double skewAngle = lineCount == 0 ? 0f : totalAngle / lineCount;
+                final double cosTheta = Math.cos(-skewAngle);
+                final double sinTheta = Math.sin(-skewAngle);
+
+                // 2. Sort the blocks using a rotation matrix transformation
+                blocks.sort(new Comparator<Text.TextBlock>() {
+                    @Override
+                    public int compare(Text.TextBlock b1, Text.TextBlock b2) {
+                        if (b1 == null || b2 == null) {
+                            return 0;
+                        }
+
+                        final Rect r1 = b1.getBoundingBox();
+                        final Rect r2 = b2.getBoundingBox();
+                        final Point[] p1 = b1.getCornerPoints();
+                        final Point[] p2 = b2.getCornerPoints();
+                        double cx1, cy1, cx2, cy2;
+
+                        if (r1 == null || r2 == null) {
+                            return 0;
+                        }
+
+                        if (p1 == null || p1.length < 2 || p2 == null || p2.length < 2) {
+                            // Get top midpoints from the bounding box
+                            cx1 = r1.exactCenterX();
+                            cy1 = r1.top; // Strictly the top boundary
+                            cx2 = r2.exactCenterX();
+                            cy2 = r2.top; // Strictly the top boundary
+                        } else {
+                            // Get top midpoints from the corner points
+                            cx1 = (p1[0].x + p1[1].x) / 2.0;
+                            cy1 = (p1[0].y + p1[1].y) / 2.0;
+                            cx2 = (p2[0].x + p2[1].x) / 2.0;
+                            cy2 = (p2[0].y + p2[1].y) / 2.0;
+                        }
+
+                        // Rotate centers mathematically to "level" the text
+                        // Standard 2D Rotation Matrix formulas
+                        final double rotatedY1 = cx1 * sinTheta + cy1 * cosTheta;
+                        final double rotatedY2 = cx2 * sinTheta + cy2 * cosTheta;
+                        final double rotatedX1 = cx1 * cosTheta - cy1 * sinTheta;
+                        final double rotatedX2 = cx2 * cosTheta - cy2 * sinTheta;
+
+                        // Define a dynamic vertical threshold based on block height
+                        final double threshold = Math.max(r1.height(), r2.height()) * 0.5;
+
+                        if (Math.abs(rotatedY1 - rotatedY2) > threshold) {
+                            // Sort Top to Bottom on the newly leveled plane
+                            return Double.compare(rotatedY1, rotatedY2);
+                        } else {
+                            // Sort Left to Right on the newly leveled plane
+                            return Double.compare(rotatedX1, rotatedX2);
+                        }
+                    }
+                });
+
+                for (Text.TextBlock block : blocks) {
                     if (block == null) {
                         continue;
                     }
