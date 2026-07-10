@@ -311,33 +311,59 @@ public class TextReader implements Handler.Callback {
                         final Rect r2 = b2.getBoundingBox();
                         final Point[] p1 = b1.getCornerPoints();
                         final Point[] p2 = b2.getCornerPoints();
-                        double cx1, cy1, cx2, cy2;
+                        double topX1, topY1, topX2, topY2;
+                        double botX1, botY1, botX2, botY2;
 
                         if (r1 == null || r2 == null) {
                             return 0;
                         }
 
-                        if (p1 == null || p1.length < 2 || p2 == null || p2.length < 2) {
+                        if (p1 == null || p1.length < 4 || p2 == null || p2.length < 4) {
                             // Get top midpoints from the bounding box
-                            cx1 = r1.exactCenterX();
-                            cy1 = r1.top; // Strictly the top boundary
-                            cx2 = r2.exactCenterX();
-                            cy2 = r2.top; // Strictly the top boundary
+                            topX1 = r1.exactCenterX();
+                            topY1 = r1.top;
+                            topX2 = r2.exactCenterX();
+                            topY2 = r2.top;
+
+                            // Get bottom midpoints from the bounding box
+                            botX1 = r1.exactCenterX();
+                            botY1 = r1.bottom;
+                            botX2 = r2.exactCenterX();
+                            botY2 = r2.bottom;
                         } else {
                             // Get top midpoints from the corner points
-                            cx1 = (p1[0].x + p1[1].x) / 2.0;
-                            cy1 = (p1[0].y + p1[1].y) / 2.0;
-                            cx2 = (p2[0].x + p2[1].x) / 2.0;
-                            cy2 = (p2[0].y + p2[1].y) / 2.0;
+                            topX1 = (p1[0].x + p1[1].x) / 2.0;
+                            topY1 = (p1[0].y + p1[1].y) / 2.0;
+                            topX2 = (p2[0].x + p2[1].x) / 2.0;
+                            topY2 = (p2[0].y + p2[1].y) / 2.0;
+
+                            // Get bottom midpoints from the corner points
+                            botX1 = (p1[2].x + p1[3].x) / 2.0;
+                            botY1 = (p1[2].y + p1[3].y) / 2.0;
+                            botX2 = (p2[2].x + p2[3].x) / 2.0;
+                            botY2 = (p2[2].y + p2[3].y) / 2.0;
                         }
 
                         // Rotate centers mathematically to "level" the text
                         // Standard 2D Rotation Matrix formulas
-                        final double rotatedY1 = cx1 * sinTheta + cy1 * cosTheta;
-                        final double rotatedY2 = cx2 * sinTheta + cy2 * cosTheta;
+                        final double rTopY1 = topX1 * sinTheta + topY1 * cosTheta;
+                        final double rTopY2 = topX2 * sinTheta + topY2 * cosTheta;
+                        final double rBotY1 = botX1 * sinTheta + botY1 * cosTheta;
+                        final double rBotY2 = botX2 * sinTheta + botY2 * cosTheta;
+
+                        final double rTopX1 = topX1 * cosTheta - topY1 * sinTheta;
+                        final double rTopX2 = topX2 * cosTheta - topY2 * sinTheta;
+
+                        // Check if overlapping
+                        if (rTopY1 < rTopY2 && rTopY2 < rBotY1) {
+                            return Double.compare(rTopX1, rTopX2);
+                        }
+                        if (rTopY2 < rTopY1 && rTopY1 < rBotY2) {
+                            return Double.compare(rTopX1, rTopX2);
+                        }
 
                         // Sort Top to Bottom on the newly leveled plane
-                        return Double.compare(rotatedY1, rotatedY2);
+                        return Double.compare(rTopY1, rTopY2);
                     }
                 });
 
