@@ -23,6 +23,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -59,6 +60,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     private String mTts;
     private int mCount;
     private int mStart;
+    private int mBannerColor;
 
     private boolean mShowCopyright;
     private boolean mShowBackground;
@@ -92,6 +94,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
 
         mShowCopyright = false;
         mShowBackground = false;
+        mBannerColor = -1;
 
         updateTextSize();
     }
@@ -307,6 +310,29 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
         final Paint.FontMetrics metrics = mTextPaint.getFontMetrics();
         final int textHeight = (int)(metrics.descent - metrics.ascent);
         mBackgroundHeight = textHeight * mSettingsManager.getBanner() + OFFSET * 2;
+
+        final int bannerColor = mSettingsManager.getBannerColor();
+        if (mBannerColor != bannerColor) {
+            switch(bannerColor) {
+                case 0:
+                    mTextPaint.setColor(Color.WHITE);
+                    mBackgroundPaint.setColor(Color.BLACK);
+                break;
+                case 1:
+                    mTextPaint.setColor(Color.BLACK);
+                    mBackgroundPaint.setColor(Color.WHITE);
+                break;
+                case 2:
+                    mTextPaint.setColor(Color.YELLOW);
+                    mBackgroundPaint.setColor(Color.BLACK);
+                break;
+                case 3:
+                    mTextPaint.setColor(Color.BLACK);
+                    mBackgroundPaint.setColor(Color.YELLOW);
+                break;
+            }
+            mBannerColor = bannerColor;
+        }
     }
 
     // Package-private accessors purely to verify internal states in Unit Tests
