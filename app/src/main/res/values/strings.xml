@@ -38,6 +38,10 @@
     <string name="entries_banner_black_white">Black text, white background</string>
     <string name="entries_banner_yellow_black">Yellow text, black background</string>
     <string name="entries_banner_black_yellow">Black text, yellow background</string>
+    <string name="entries_banner_indigo_blue">Accessibility safe: deep indigo on sky blue</string>
+    <string name="entries_banner_yellow_gray">Solar eclipse: soft yellow on dark slate gray</string>
+    <string name="entries_banner_white_charcoal">Soft charcoal: off white on charcoal </string>
+    <string name="entries_banner_espresso_cream">Warm sand: dark espresso on soft cream</string>
     <string name="entries_banner_font_system">System sans serif</string>
     <string name="entries_banner_font_hyperlegible_medium">Atkinson Hyperlegible Next Medium</string>
     <string name="entries_banner_font_hyperlegible_bold">Atkinson Hyperlegible Next Bold</string>

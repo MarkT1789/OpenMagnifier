@@ -351,21 +351,37 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
         final int bannerColor = mSettingsManager.getBannerColor();
         if (mBannerColor != bannerColor) {
             switch(bannerColor) {
-                case 0:
+                case 0: /* white on black */
                     mTextPaint.setColor(Color.WHITE);
                     mBackgroundPaint.setColor(Color.BLACK);
                 break;
-                case 1:
+                case 1: /* black on white */
                     mTextPaint.setColor(Color.BLACK);
                     mBackgroundPaint.setColor(Color.WHITE);
                 break;
-                case 2:
+                case 2: /* yellow on black */
                     mTextPaint.setColor(Color.YELLOW);
                     mBackgroundPaint.setColor(Color.BLACK);
                 break;
-                case 3:
+                case 3: /* black on yellow *
                     mTextPaint.setColor(Color.BLACK);
                     mBackgroundPaint.setColor(Color.YELLOW);
+                break;
+                case 4: /* accessibility safe: deep indigo on sky blue */
+                    mTextPaint.setColor(0xFF1B263B);
+                    mBackgroundPaint.setColor(0xFFC9E4DE);
+                break;
+                case 5: /* solar eclipse: soft yellow on dark slate gray */
+                    mTextPaint.setColor(0xFFFFF275);
+                    mBackgroundPaint.setColor(0xFF22252A);
+                break;
+                case 6: /* soft charcoal: off white on charcoal */
+                    mTextPaint.setColor(0xFFF5F5F5);
+                    mBackgroundPaint.setColor(0xFF1C1C1C);
+                break;
+                case 7: /* warm sand: dark espresso on soft cream */
+                    mTextPaint.setColor(0xFF2B1B17);
+                    mBackgroundPaint.setColor(0xFFFDFBF7);
                 break;
             }
             mBannerColor = bannerColor;

@@ -211,12 +211,20 @@
         <item>@string/entries_banner_black_white</item>
         <item>@string/entries_banner_yellow_black</item>
         <item>@string/entries_banner_black_yellow</item>
+        <item>@string/entries_banner_indigo_blue</item>
+        <item>@string/entries_banner_yellow_gray</item>
+        <item>@string/entries_banner_white_charcoal</item>
+        <item>@string/entries_banner_espresso_cream</item>
     </string-array>
     <string-array name="banner_color_values">
         <item>0</item>
         <item>1</item>
         <item>2</item>
         <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
     </string-array>
 
     <string-array name="banner_font_entries">
