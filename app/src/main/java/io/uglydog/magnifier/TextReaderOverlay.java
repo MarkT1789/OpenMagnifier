@@ -36,6 +36,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.res.ResourcesCompat;
 
 public class TextReaderOverlay extends View implements Handler.Callback, ITextReaderOverlay {
 
@@ -61,6 +62,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     private int mCount;
     private int mStart;
     private int mBannerColor;
+    private int mBannerFont;
 
     private boolean mShowCopyright;
     private boolean mShowBackground;
@@ -95,6 +97,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
         mShowCopyright = false;
         mShowBackground = false;
         mBannerColor = -1;
+        mBannerFont = -1;
 
         updateTextSize();
     }
@@ -298,6 +301,40 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     @Override
     public void updateTextSize() {
         if (mSettingsManager == null) return;
+
+        final int bannerFont = mSettingsManager.getBannerFont();
+        if (mBannerFont != bannerFont) {
+            switch(bannerFont) {
+                case 0:
+                    mTextPaint.setTypeface(Typeface.SANS_SERIF);
+                break;
+                case 1:
+                   final Typeface hyperlegibleMediumFont = ResourcesCompat.getFont(getContext(), R.font.atkinson_hyperlegible_next_medium);
+                   if (hyperlegibleMediumFont != null) {
+                       mTextPaint.setTypeface(hyperlegibleMediumFont);
+                   }
+                break;
+                case 2:
+                   final Typeface hyperlegibleBoldFont = ResourcesCompat.getFont(getContext(), R.font.atkinson_hyperlegible_next_bold);
+                   if (hyperlegibleBoldFont != null) {
+                       mTextPaint.setTypeface(hyperlegibleBoldFont);
+                   }
+                break;
+                case 3:
+                   final Typeface dyslexicRegularFont = ResourcesCompat.getFont(getContext(), R.font.open_dyslexic_regular);
+                   if (dyslexicRegularFont != null) {
+                       mTextPaint.setTypeface(dyslexicRegularFont);
+                   }
+                break;
+                case 4:
+                   final Typeface dyslexicBoldFont = ResourcesCompat.getFont(getContext(), R.font.open_dyslexic_bold);
+                   if (dyslexicBoldFont != null) {
+                       mTextPaint.setTypeface(dyslexicBoldFont);
+                   }
+                break;
+            }
+            mBannerFont = bannerFont;
+        }
 
         final float banner_size =  mSettingsManager.getBannerSize();
         final float pxSize = TypedValue.applyDimension(

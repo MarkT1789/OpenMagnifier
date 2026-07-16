@@ -42,10 +42,11 @@ public class SettingsManager {
     private static final String KEY_VOLUME = "volume_setting";
     private static final String KEY_BANNER_SIZE = "banner_size_setting";
     private static final String KEY_BANNER_COLOR = "banner_color_setting";
+    private static final String KEY_BANNER_FONT = "banner_font_setting";
 
     private final SharedPreferences mPrefs;
     private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight, mBannerSize;
-    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor;
+    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont;
     private String mSplashVersion;
 
     public SettingsManager(@NonNull final SharedPreferences sharedPreferences) {
@@ -70,6 +71,7 @@ public class SettingsManager {
         mVolume = getInt(KEY_VOLUME, 0);
         mBannerSize = getFloat(KEY_BANNER_SIZE, 1.0f);
         mBannerColor = getInt(KEY_BANNER_COLOR, 0);
+        mBannerFont = getInt(KEY_BANNER_FONT, 0);
     }
 
     public synchronized float getBrightness() {
@@ -214,6 +216,15 @@ public class SettingsManager {
     public synchronized void setBannerColor(final int bannerColor) {
         mBannerColor = bannerColor;
         setInt(KEY_BANNER_COLOR, bannerColor);
+    }
+
+    public synchronized int getBannerFont() {
+        return mBannerFont;
+    }
+
+    public synchronized void setBannerFont(final int bannerFont) {
+        mBannerFont = bannerFont;
+        setInt(KEY_BANNER_FONT, bannerFont);
     }
 
     /***************************************************/
