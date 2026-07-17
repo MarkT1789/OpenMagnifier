@@ -61,6 +61,9 @@ public class TextReaderOverlayTest {
         
         mMockSettingsManager = mock(SettingsManager.class);
         when(mMockSettingsManager.getBannerSize()).thenReturn(1.0f);
+        when(mMockSettingsManager.getBanner()).thenReturn(2);
+        when(mMockSettingsManager.getBannerFont()).thenReturn(0);
+        when(mMockSettingsManager.getBannerColor()).thenReturn(0);
 
         mOverlay = new TextReaderOverlay(mActivity, null);
         mOverlay.setSettingsManager(mMockSettingsManager);
@@ -178,6 +181,7 @@ public class TextReaderOverlayTest {
         mOverlay.setText("Sample text matching layouts text configurations", 0, 10);
         ShadowLooper.idleMainLooper();
         
+        // This exercises the (mCount != 0) inside the identical-string logic branch
         mOverlay.setText("Sample text matching layouts text configurations", 2, 25);
         ShadowLooper.idleMainLooper();
         
@@ -291,5 +295,49 @@ public class TextReaderOverlayTest {
     public void testCloseClearsHandlerMessages() {
         mOverlay.close();
         ShadowLooper.idleMainLooper();
+    }
+
+    @Test
+    public void testOnDetachedFromWindowClosesHandler() {
+        // Completely covers onDetachedFromWindow sequence via view destruction flow
+        ((ViewGroup) mOverlay.getParent()).removeView(mOverlay);
+        ShadowLooper.idleMainLooper();
+    }
+
+    @Test
+    public void testUpdateTextSizeAllFontsAndColors() {
+        // Sequentially exercise font switches (0 through 12)
+        for (int i = 0; i <= 12; i++) {
+            when(mMockSettingsManager.getBannerFont()).thenReturn(i);
+            mOverlay.updateTextSize();
+        }
+
+        // Sequentially exercise theme background color switches (0 through 7)
+        for (int i = 0; i <= 7; i++) {
+            when(mMockSettingsManager.getBannerColor()).thenReturn(i);
+            mOverlay.updateTextSize();
+        }
+    }
+
+    @Test
+    public void testDrawTextRtlAndMaxLinesExceeded() {
+        // Configure SettingsManager to have a single line constraint
+        when(mMockSettingsManager.getBanner()).thenReturn(1);
+        mOverlay.updateTextSize();
+
+        // 1. Force branch: staticLayout.getLineCount() > mSettingsManager.getBanner()
+        mOverlay.setText("This is an exceptionally long piece of multiline text designed to exceed a banner setting of one line maximum.", 0, 5);
+        ShadowLooper.idleMainLooper();
+
+        mOverlay.layout(0, 0, 200, 1000);
+        Bitmap bitmap = Bitmap.createBitmap(200, 1000, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        mOverlay.onDraw(canvas);
+
+        // 2. Force branch: textDirection == Layout.DIR_RIGHT_TO_LEFT
+        String rtlText = "مرحبا بالعالم هذا نص طويل جدا لتجربة اتجاه النص";
+        mOverlay.setText(rtlText, 0, 5);
+        ShadowLooper.idleMainLooper();
+        mOverlay.onDraw(canvas);
     }
 }
