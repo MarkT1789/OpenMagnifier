@@ -309,28 +309,40 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
                     mTextPaint.setTypeface(Typeface.SANS_SERIF);
                 break;
                 case 1:
-                   final Typeface hyperlegibleMediumFont = ResourcesCompat.getFont(getContext(), R.font.atkinson_hyperlegible_next_medium);
-                   if (hyperlegibleMediumFont != null) {
-                       mTextPaint.setTypeface(hyperlegibleMediumFont);
-                   }
+                   setFont(R.font.atkinson_hyperlegible_next_medium);
                 break;
                 case 2:
-                   final Typeface hyperlegibleBoldFont = ResourcesCompat.getFont(getContext(), R.font.atkinson_hyperlegible_next_bold);
-                   if (hyperlegibleBoldFont != null) {
-                       mTextPaint.setTypeface(hyperlegibleBoldFont);
-                   }
+                   setFont(R.font.atkinson_hyperlegible_next_bold);
                 break;
                 case 3:
-                   final Typeface dyslexicRegularFont = ResourcesCompat.getFont(getContext(), R.font.open_dyslexic_regular);
-                   if (dyslexicRegularFont != null) {
-                       mTextPaint.setTypeface(dyslexicRegularFont);
-                   }
+                   setFont(R.font.open_dyslexic_regular);
                 break;
                 case 4:
-                   final Typeface dyslexicBoldFont = ResourcesCompat.getFont(getContext(), R.font.open_dyslexic_bold);
-                   if (dyslexicBoldFont != null) {
-                       mTextPaint.setTypeface(dyslexicBoldFont);
-                   }
+                   setFont(R.font.open_dyslexic_bold);
+                break;
+                case 5:
+                   setFont(R.font.lexend_deca_medium);
+                break;
+                case 6:
+                   setFont(R.font.lexend_deca_bold);
+                break;
+                case 7:
+                   setFont(R.font.lexend_giga_medium);
+                break;
+                case 8:
+                   setFont(R.font.lexend_giga_bold);
+                break;
+                case 9:
+                   setFont(R.font.lexend_peta_medium);
+                break;
+                case 10:
+                   setFont(R.font.lexend_peta_bold);
+                break;
+                case 11:
+                   setFont(R.font.lexend_zetta_medium);
+                break;
+                case 12:
+                   setFont(R.font.lexend_zetta_bold);
                 break;
             }
             mBannerFont = bannerFont;
@@ -385,6 +397,13 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
                 break;
             }
             mBannerColor = bannerColor;
+        }
+    }
+
+    private void setFont(int id) {
+        final Typeface font = ResourcesCompat.getFont(getContext(), id);
+        if (font != null) {
+            mTextPaint.setTypeface(font);
         }
     }
 

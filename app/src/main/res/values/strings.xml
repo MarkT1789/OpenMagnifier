@@ -47,6 +47,14 @@
     <string name="entries_banner_font_hyperlegible_bold">Atkinson Hyperlegible Next Bold</string>
     <string name="entries_banner_font_dyslexic_regular">Open Dyslexic Regular</string>
     <string name="entries_banner_font_dyslexic_bold">Open Dyslexic Bold</string>
+    <string name="entries_banner_font_lexend_deca_medium">Lexend Deca Medium</string>
+    <string name="entries_banner_font_lexend_deca_bold">Lexend Deca Bold</string>
+    <string name="entries_banner_font_lexend_giga_medium">Lexend Giga Medium</string>
+    <string name="entries_banner_font_lexend_giga_bold">Lexend Giga Bold</string>
+    <string name="entries_banner_font_lexend_peta_medium">Lexend Peta Medium</string>
+    <string name="entries_banner_font_lexend_peta_bold">Lexend Peta Bold</string>
+    <string name="entries_banner_font_lexend_zetta_medium">Lexend Zetta Medium</string>
+    <string name="entries_banner_font_lexend_zetta_bold">Lexend Zetta Bold</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_rotation">Screen Rotation (freeze frame)</string>
