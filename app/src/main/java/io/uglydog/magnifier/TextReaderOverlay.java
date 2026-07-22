@@ -298,52 +298,50 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
         invalidate();
     }
 
+    public int getFontId(final int index) {
+        switch(index) {
+            case 1:
+                return R.font.atkinson_hyperlegible_next_medium;
+            case 2:
+                return R.font.atkinson_hyperlegible_next_bold;
+            case 3:
+                return R.font.open_dyslexic_regular;
+            case 4:
+                return R.font.open_dyslexic_bold;
+            case 5:
+                return R.font.lexend_deca_medium;
+            case 6:
+                return R.font.lexend_deca_bold;
+            case 7:
+                return R.font.lexend_giga_medium;
+            case 8:
+                return R.font.lexend_giga_bold;
+            case 9:
+                return R.font.lexend_peta_medium;
+            case 10:
+                return R.font.lexend_peta_bold;
+            case 11:
+                return R.font.lexend_zetta_medium;
+            case 12:
+                return R.font.lexend_zetta_bold;
+            default:
+                return -1;
+        }
+    }
+
     @Override
     public void updateTextSize() {
         if (mSettingsManager == null) return;
 
         final int bannerFont = mSettingsManager.getBannerFont();
         if (mBannerFont != bannerFont) {
-            switch(bannerFont) {
-                case 0:
-                    mTextPaint.setTypeface(Typeface.SANS_SERIF);
-                break;
-                case 1:
-                   setFont(R.font.atkinson_hyperlegible_next_medium);
-                break;
-                case 2:
-                   setFont(R.font.atkinson_hyperlegible_next_bold);
-                break;
-                case 3:
-                   setFont(R.font.open_dyslexic_regular);
-                break;
-                case 4:
-                   setFont(R.font.open_dyslexic_bold);
-                break;
-                case 5:
-                   setFont(R.font.lexend_deca_medium);
-                break;
-                case 6:
-                   setFont(R.font.lexend_deca_bold);
-                break;
-                case 7:
-                   setFont(R.font.lexend_giga_medium);
-                break;
-                case 8:
-                   setFont(R.font.lexend_giga_bold);
-                break;
-                case 9:
-                   setFont(R.font.lexend_peta_medium);
-                break;
-                case 10:
-                   setFont(R.font.lexend_peta_bold);
-                break;
-                case 11:
-                   setFont(R.font.lexend_zetta_medium);
-                break;
-                case 12:
-                   setFont(R.font.lexend_zetta_bold);
-                break;
+            if (bannerFont == 0) {
+                mTextPaint.setTypeface(Typeface.SANS_SERIF);
+            } else {
+                int font = getFontId(bannerFont);
+                if (font != -1) {
+                    setFont(font);
+                }
             }
             mBannerFont = bannerFont;
         }

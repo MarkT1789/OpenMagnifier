@@ -26,6 +26,7 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -43,6 +44,7 @@ import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -57,6 +59,7 @@ import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.ZoomState;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.LiveData;
@@ -762,7 +765,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                .setPositiveButton(getString(R.string.button_ok), new DialogInterface.OnClickListener() {
                    @Override
                    public void onClick(@NonNull final DialogInterface dialog, final int which) {
-                       if (checkBox.isChecked()) {
+                       if (checkBox != null && checkBox.isChecked()) {
                            mSettingsManager.setSplashVersion(getVersion());
                        }
                        dialog.dismiss();
@@ -772,7 +775,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         final AlertDialog dialog = builder.create();
         dialog.show();
 
-        if (always) {
+        if (always && checkBox != null) {
             checkBox.setVisibility(View.GONE);
         }
 
@@ -780,6 +783,22 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         if (okButton != null) {
             okButton.setFocusableInTouchMode(true);
             okButton.requestFocus();
+        }
+
+        final int bannerFont = mSettingsManager.getBannerFont();
+        if (bannerFont != 0) {
+            final int fontId = mTextReaderOverlay.getFontId(bannerFont);
+            if (fontId != -1) {
+                final Typeface font = ResourcesCompat.getFont(this, fontId);
+                final TextView textView = dialogView.findViewById(R.id.splash_content);
+                final TextView titleView = dialog.findViewById(androidx.appcompat.R.id.alertTitle);
+                if (font != null && textView != null && titleView != null && checkBox != null && okButton != null) {
+                    checkBox.setTypeface(font);
+                    okButton.setTypeface(font);
+                    textView.setTypeface(font);
+                    titleView.setTypeface(font);
+                }
+            }
         }
 
         if (dialog.getWindow() != null) {
