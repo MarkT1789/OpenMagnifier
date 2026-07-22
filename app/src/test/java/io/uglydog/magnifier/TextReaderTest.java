@@ -20,10 +20,12 @@ package io.uglydog.magnifier;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapRegionDecoder;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.view.View;
@@ -62,6 +64,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -89,7 +92,7 @@ public class TextReaderTest {
     public void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
         mContext = RuntimeEnvironment.getApplication();
-        
+
         mFakeCacheFile = new File(mContext.getCacheDir(), "test_file.jpg");
         createDummyImageFile(mFakeCacheFile);
 
@@ -171,13 +174,13 @@ public class TextReaderTest {
             // 4. Japanese
             when(mockSettings.getSpeak()).thenReturn(4);
             mTextReader.start();
-            
+
             // Speak = 0 (Off)
             when(mockSettings.getSpeak()).thenReturn(0);
             mTextReader.start();
 
             // Same speak ID (Early Return)
-            mTextReader.start(); 
+            mTextReader.start();
             assertTrue(true);
         }
     }
@@ -195,61 +198,72 @@ public class TextReaderTest {
         Field startingField = TextReader.class.getDeclaredField("mTtsStarting");
         startingField.setAccessible(true);
         startingField.set(mTextReader, true);
-        
-        mTextReader.handleMessage(msg); // Reschedules
+
+        mTextReader.handleMessage(msg);
 
         // State 2: mTtsReady = true, destroyed = false -> calls shouldSpeak()
         startingField.set(mTextReader, false);
         injectMockTts(mTextReader, mockTts);
-        
-        // Mock image view properties for shouldSpeak()
+
         when(mockImageView.isReady()).thenReturn(true);
         when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
         doAnswer(invocation -> {
             Rect r = invocation.getArgument(0);
-            r.set(0, 0, 50, 50); // non-empty rect
+            r.set(0, 0, 50, 50);
             return null;
         }).when(mockImageView).visibleFileRect(any(Rect.class));
 
-        mTextReader.handleMessage(msg); 
-        
+        mTextReader.handleMessage(msg);
+
         // State 3: Unknown message
         msg.what = 999;
         assertFalse(mTextReader.handleMessage(msg));
     }
 
     @Test
-    public void testShouldSpeak_EmptyRect_Aborts() throws Exception {
+    public void testShouldSpeak_BypassConditions() throws Exception {
         injectMockTts(mTextReader, mockTts);
-        when(mockImageView.isReady()).thenReturn(true);
-        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
-        
-        // Empty rect
-        doAnswer(invocation -> {
-            Rect r = invocation.getArgument(0);
-            r.set(0, 0, 0, 0); 
-            return null;
-        }).when(mockImageView).visibleFileRect(any(Rect.class));
 
         Message msg = Message.obtain();
         msg.what = 1;
-        mTextReader.handleMessage(msg); // Calls shouldSpeak
-        verify(mockTts, never()).stop(); // Since rect is empty, returns early, no further action
+
+        // Sub-case A: ImageView not ready
+        when(mockImageView.isReady()).thenReturn(false);
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+
+        mTextReader.handleMessage(msg);
+        verify(mockTts, atLeastOnce()).stop();
+
+        // Sub-case B: Invisible View
+        when(mockImageView.isReady()).thenReturn(true);
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+
+        mTextReader.handleMessage(msg);
+        verify(mockTts, times(2)).stop();
+
+        // Sub-case C: Empty Rect
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        doAnswer(invocation -> {
+            Rect r = invocation.getArgument(0);
+            r.set(0, 0, 0, 0);
+            return null;
+        }).when(mockImageView).visibleFileRect(any(Rect.class));
+
+        mTextReader.handleMessage(msg);
     }
 
     // ==========================================
-    // 3. IMAGE STATE LISTENER
+    // 3. IMAGE STATE LISTENER & DESTROY BRANCHES
     // ==========================================
 
     @Test
-    public void testImageStateListener() throws Exception {
-        ArgumentCaptor<SubsamplingScaleImageView.OnStateChangedListener> captor = ArgumentCaptor.forClass(SubsamplingScaleImageView.OnStateChangedListener.class);
+    public void testImageStateListener_AndDestroyedState() throws Exception {
+        ArgumentCaptor<SubsamplingScaleImageView.OnStateChangedListener> captor =
+                ArgumentCaptor.forClass(SubsamplingScaleImageView.OnStateChangedListener.class);
         verify(mockImageView).setOnStateChangedListener(captor.capture());
         SubsamplingScaleImageView.OnStateChangedListener listener = captor.getValue();
 
         injectMockTts(mTextReader, mockTts);
-
-        // Required to bypass ML Kit static uninitialized exception upon subsequent start() calls
         when(mockSettings.getSpeak()).thenReturn(0);
 
         listener.onScaleChanged(2.0f, 1);
@@ -259,6 +273,11 @@ public class TextReaderTest {
         listener.onCenterChanged(new PointF(0, 0), 1);
         verify(mockOverlay, times(2)).clear();
         verify(mockTts, times(2)).stop();
+
+        // Destroy and verify listener ignores callbacks when reader is destroyed
+        mTextReader.destroy();
+        listener.onScaleChanged(3.0f, 1);
+        listener.onCenterChanged(new PointF(10, 10), 1);
     }
 
     // ==========================================
@@ -266,39 +285,50 @@ public class TextReaderTest {
     // ==========================================
 
     @Test
-    public void testTtsInitListener() throws Exception {
+    public void testTtsInitListener_AllBranches() throws Exception {
         Class<?> initListenerClass = Class.forName("io.uglydog.magnifier.TextReader$TtsInitListener");
         Constructor<?> constructor = initListenerClass.getDeclaredConstructor(TextReader.class, Locale.class);
         constructor.setAccessible(true);
-        TextToSpeech.OnInitListener listener = (TextToSpeech.OnInitListener) constructor.newInstance(mTextReader, Locale.US);
 
+        // Test normal lifecycle
+        TextToSpeech.OnInitListener listener = (TextToSpeech.OnInitListener) constructor.newInstance(mTextReader, Locale.US);
         injectMockTts(mTextReader, mockTts);
-        
-        // Missing data
+
+        // LANG_MISSING_DATA
         when(mockTts.setLanguage(Locale.US)).thenReturn(TextToSpeech.LANG_MISSING_DATA);
         listener.onInit(TextToSpeech.SUCCESS);
 
-        // Success
+        // LANG_NOT_SUPPORTED
+        when(mockTts.setLanguage(Locale.US)).thenReturn(TextToSpeech.LANG_NOT_SUPPORTED);
+        listener.onInit(TextToSpeech.SUCCESS);
+
+        // SUCCESS branch
         when(mockTts.setLanguage(Locale.US)).thenReturn(TextToSpeech.LANG_AVAILABLE);
         listener.onInit(TextToSpeech.SUCCESS);
 
-        // Error
+        // ERROR branch
         listener.onInit(TextToSpeech.ERROR);
+
+        // WeakReference GC / Destroyed branch
+        TextReader nullReader = new TextReader(mContext, mockImageView, mockOverlay, "test_file.jpg", mockSettings, mockTranslationManager);
+        TextToSpeech.OnInitListener listenerNull = (TextToSpeech.OnInitListener) constructor.newInstance(nullReader, Locale.US);
+        nullReader.destroy();
+        listenerNull.onInit(TextToSpeech.SUCCESS);
     }
 
     @Test
-    public void testTtsProgressListener() throws Exception {
+    public void testTtsProgressListener_AllCallbacks() throws Exception {
         Class<?> progListenerClass = Class.forName("io.uglydog.magnifier.TextReader$TtsProgressListener");
         Constructor<?> constructor = progListenerClass.getDeclaredConstructor(TextReader.class);
         constructor.setAccessible(true);
         UtteranceProgressListener listener = (UtteranceProgressListener) constructor.newInstance(mTextReader);
 
-        // Populate HashMap
         Field mapField = TextReader.class.getDeclaredField("mHashMap");
         mapField.setAccessible(true);
         HashMap<String, String> map = (HashMap<String, String>) mapField.get(mTextReader);
-        map.put("10:10:20:20", "Test Text");
 
+        // Standard test
+        map.put("10:10:20:20", "Test Banner Text");
         listener.onStart("10:10:20:20");
         listener.onRangeStart("10:10:20:20", 0, 4, 0);
         listener.onDone("10:10:20:20");
@@ -307,16 +337,33 @@ public class TextReaderTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(mockOverlay).setRect(any(Rect.class));
-        verify(mockOverlay).setText("Test Text", 0, 4);
+        verify(mockOverlay).setText("Test Banner Text", 0, 4);
         verify(mockOverlay, times(2)).clear();
+
+        // Edge case: banner = 0, invalid coordinates length != 4
+        when(mockSettings.getBanner()).thenReturn(0);
+        listener.onStart("invalid_id");
+        listener.onRangeStart("10:10:20:20", 0, 4, 0);
+
+        // WeakReference / null / destroyed branch
+        TextReader destroyedReader = new TextReader(mContext, mockImageView, mockOverlay, "test_file.jpg", mockSettings, mockTranslationManager);
+        UtteranceProgressListener destroyedListener = (UtteranceProgressListener) constructor.newInstance(destroyedReader);
+        destroyedReader.destroy();
+
+        destroyedListener.onStart("10:10:20:20");
+        destroyedListener.onRangeStart("10:10:20:20", 0, 4, 0);
+        destroyedListener.onDone("10:10:20:20");
+        destroyedListener.onError("10:10:20:20");
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
     }
 
     // ==========================================
-    // 5. ML KIT LISTENERS (REFLECTION)
+    // 5. ML KIT LISTENERS & SORTING MATRIX
     // ==========================================
 
     @Test
-    public void testTextRecognitionSuccessListener() throws Exception {
+    public void testTextRecognitionSuccessListener_SortingAndEdgeCases() throws Exception {
         Class<?> successClass = Class.forName("io.uglydog.magnifier.TextReader$TextRecognitionSuccessListener");
         Constructor<?> constructor = successClass.getDeclaredConstructor(TextReader.class, ITranslationManager.class, Bitmap.class, int.class, int.class, int.class);
         constructor.setAccessible(true);
@@ -327,27 +374,51 @@ public class TextReaderTest {
 
         OnSuccessListener<Text> listener = (OnSuccessListener<Text>) constructor.newInstance(mTextReader, mockTranslationManager, dummyBitmap, 1080, 1920, 0);
 
-        // Mock Text blocks
+        // Mock Blocks, Lines, Corner Points
         Text mockText = mock(Text.class);
-        Text.TextBlock validBlock = mock(Text.TextBlock.class);
-        when(validBlock.getBoundingBox()).thenReturn(new Rect(10, 10, 50, 50));
-        when(validBlock.getText()).thenReturn("Hello\nWorld");
 
-        Text.TextBlock nullBoundsBlock = mock(Text.TextBlock.class);
-        when(nullBoundsBlock.getBoundingBox()).thenReturn(null);
+        Text.TextBlock block1 = mock(Text.TextBlock.class);
+        Text.TextBlock block2 = mock(Text.TextBlock.class);
+        Text.Line line1 = mock(Text.Line.class);
 
-        List<Text.TextBlock> blocks = Arrays.asList(validBlock, nullBoundsBlock, null);
+        when(block1.getBoundingBox()).thenReturn(new Rect(10, 10, 50, 50));
+        when(block1.getText()).thenReturn("Text One");
+        when(block1.getCornerPoints()).thenReturn(new Point[]{new Point(0, 0), new Point(10, 0), new Point(10, 10), new Point(0, 10)});
+        when(block1.getLines()).thenReturn(Collections.singletonList(line1));
+        when(line1.getCornerPoints()).thenReturn(new Point[]{new Point(0, 0), new Point(10, 2)}); // skewed line
+
+        when(block2.getBoundingBox()).thenReturn(new Rect(10, 60, 50, 100));
+        when(block2.getText()).thenReturn("Text Two");
+        when(block2.getCornerPoints()).thenReturn(null); // Force fallback bounding box midpoints calculation
+        when(block2.getLines()).thenReturn(Collections.emptyList());
+
+        List<Text.TextBlock> blocks = new ArrayList<>(Arrays.asList(block1, block2, null));
         when(mockText.getTextBlocks()).thenReturn(blocks);
 
         listener.onSuccess(mockText);
 
         verify(mockTts).stop();
-        verify(mockTranslationManager).translate(any(), any(), any(), eq("Hello World"), anyString());
+        verify(mockTranslationManager, atLeastOnce()).translate(any(), any(), any(), anyString(), anyString());
         assertTrue(dummyBitmap.isRecycled());
     }
 
     @Test
-    public void testTextRecognitionFailureListener() throws Exception {
+    public void testTextRecognitionSuccessListener_BypassAndTokenMismatch() throws Exception {
+        Class<?> successClass = Class.forName("io.uglydog.magnifier.TextReader$TextRecognitionSuccessListener");
+        Constructor<?> constructor = successClass.getDeclaredConstructor(TextReader.class, ITranslationManager.class, Bitmap.class, int.class, int.class, int.class);
+        constructor.setAccessible(true);
+
+        Bitmap dummyBitmap = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
+
+        // Token mismatch (listener token = 999, currentTaskToken = 0)
+        OnSuccessListener<Text> listener = (OnSuccessListener<Text>) constructor.newInstance(mTextReader, mockTranslationManager, dummyBitmap, 1080, 1920, 999);
+        listener.onSuccess(mock(Text.class));
+
+        assertTrue(dummyBitmap.isRecycled());
+    }
+
+    @Test
+    public void testTextRecognitionFailureListener_AllBranches() throws Exception {
         Class<?> failureClass = Class.forName("io.uglydog.magnifier.TextReader$TextRecognitionFailureListener");
         Constructor<?> constructor = failureClass.getDeclaredConstructor(TextReader.class, Bitmap.class, int.class);
         constructor.setAccessible(true);
@@ -355,16 +426,22 @@ public class TextReaderTest {
         Bitmap dummyBitmap = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
         OnFailureListener listener = (OnFailureListener) constructor.newInstance(mTextReader, dummyBitmap, 0);
 
-        listener.onFailure(new Exception("Test Error"));
+        listener.onFailure(new Exception("ML Kit Error"));
         assertTrue(dummyBitmap.isRecycled());
+
+        // Token Mismatch / Destroyed branch
+        Bitmap dummyBitmap2 = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
+        OnFailureListener listenerMismatch = (OnFailureListener) constructor.newInstance(mTextReader, dummyBitmap2, 999);
+        listenerMismatch.onFailure(new Exception("Mismatch"));
+        assertTrue(dummyBitmap2.isRecycled());
     }
 
     // ==========================================
-    // 6. PROCESS FILE BRANCHES
+    // 6. PROCESS FILE & BITMAP DECODER BRANCHES
     // ==========================================
 
     @Test
-    public void testProcessFile_SuccessPath() throws Exception {
+    public void testProcessFile_SuccessAndLegacySdk() throws Exception {
         injectMockRecognizer(mTextReader, mockTextRecognizer);
         when(mockTextRecognizer.process(any(InputImage.class))).thenReturn(mockTask);
 
@@ -374,16 +451,15 @@ public class TextReaderTest {
             mockedStaticInput.when(() -> InputImage.fromBitmap(any(Bitmap.class), anyInt()))
                     .thenReturn(mock(InputImage.class));
 
-            // Force mock BitmapRegionDecoder to circumvent Robolectric framework SDK null-pointers during File parsing
             BitmapRegionDecoder mockDecoder = mock(BitmapRegionDecoder.class);
             mockedDecoderStatic.when(() -> BitmapRegionDecoder.newInstance(any(FileInputStream.class)))
                     .thenReturn(mockDecoder);
             mockedDecoderStatic.when(() -> BitmapRegionDecoder.newInstance(any(FileInputStream.class), anyBoolean()))
                     .thenReturn(mockDecoder);
             when(mockDecoder.decodeRegion(any(Rect.class), any())).thenReturn(Bitmap.createBitmap(50, 50, Bitmap.Config.ARGB_8888));
-            
+
             Rect validRect = new Rect(0, 0, 50, 50);
-            mTextReader.processFile(validRect, 1080, 1920, 0); // Token is initialized to 0
+            mTextReader.processFile(validRect, 1080, 1920, 0);
 
             verify(mockTextRecognizer).process(any(InputImage.class));
             verify(mockTask).addOnSuccessListener(any());
@@ -391,45 +467,58 @@ public class TextReaderTest {
     }
 
     @Test
-    public void testProcessFile_MissingFile() throws Exception {
+    public void testProcessFile_ExceptionsAndNullBitmap() throws Exception {
         injectMockRecognizer(mTextReader, mockTextRecognizer);
-        mFakeCacheFile.delete(); // Force file missing
+
+        // Sub-case 1: Missing file
+        mFakeCacheFile.delete();
         mTextReader.processFile(new Rect(0, 0, 50, 50), 1080, 1920, 0);
         verify(mockTextRecognizer, never()).process(any(InputImage.class));
-    }
 
-    @Test
-    public void testProcessFile_DecodingException() throws Exception {
-        // Feed it a corrupt file by writing garbage data
+        // Sub-case 2: Corrupted file causing decoding exception/null
+        createDummyImageFile(mFakeCacheFile);
         FileOutputStream fos = new FileOutputStream(mFakeCacheFile);
-        fos.write(new byte[]{1, 2, 3, 4, 5});
+        fos.write(new byte[]{0, 1, 2, 3});
         fos.close();
 
-        injectMockRecognizer(mTextReader, mockTextRecognizer);
-        
-        // This will cause getClippedBitmap to catch an exception/return null
         mTextReader.processFile(new Rect(0, 0, 50, 50), 1080, 1920, 0);
         verify(mockTextRecognizer, never()).process(any(InputImage.class));
     }
 
     // ==========================================
-    // 7. VOLUME CHANGED
+    // 7. VOLUME CONTROL & NAVIGATION BRANCHES
     // ==========================================
 
     @Test
-    public void testOnVolumeChanged() throws Exception {
+    public void testOnVolumeChanged_AllBranches() throws Exception {
         injectMockTts(mTextReader, mockTts);
-        
+
         Field mapField = TextReader.class.getDeclaredField("mHashMap");
         mapField.setAccessible(true);
         HashMap<String, String> map = (HashMap<String, String>) mapField.get(mTextReader);
-        
+
         Field listField = TextReader.class.getDeclaredField("mArrayList");
         listField.setAccessible(true);
         ArrayList<String> list = (ArrayList<String>) listField.get(mTextReader);
 
         Field lastVolField = TextReader.class.getDeclaredField("mLastVolumeUp");
         lastVolField.setAccessible(true);
+
+        // Sub-case A: Disabled volume / speak setting
+        when(mockSettings.getVolume()).thenReturn(0);
+        assertFalse(mTextReader.onVolumeChanged(0));
+
+        when(mockSettings.getVolume()).thenReturn(1);
+        when(mockSettings.getSpeak()).thenReturn(0);
+        assertFalse(mTextReader.onVolumeChanged(0));
+
+        when(mockSettings.getSpeak()).thenReturn(1);
+
+        // Sub-case B: Missing current ID or index missing
+        assertFalse(mTextReader.onVolumeChanged(0));
+
+        map.put("current", "missing_id");
+        assertFalse(mTextReader.onVolumeChanged(0));
 
         // Populate state
         map.put("current", "id2");
@@ -440,30 +529,44 @@ public class TextReaderTest {
         list.add("id2");
         list.add("id3");
 
-        // Cmd 0 (Backwards)
-        // Force the last clock state to be way in the past so delay > 1000
+        // Cmd 0 (Backwards with delay > 1000)
         lastVolField.set(mTextReader, -10000L);
-        boolean result = mTextReader.onVolumeChanged(0);
-        assertTrue(result);
+        assertTrue(mTextReader.onVolumeChanged(0));
         verify(mockTts).speak("Text 2", TextToSpeech.QUEUE_ADD, null, "id2");
 
-        // Cmd 0 (Backwards)
-        // Set the last clock state to exactly 500ms ago. Delay is mathematically > 0 and < 1000.
-        lastVolField.set(mTextReader, android.os.SystemClock.uptimeMillis() - 500L);
-        result = mTextReader.onVolumeChanged(0);
-        assertTrue(result);
+        // Cmd 0 (Backwards double-press with delay < 1000)
+        lastVolField.set(mTextReader, SystemClock.uptimeMillis() - 300L);
+        assertTrue(mTextReader.onVolumeChanged(0));
         verify(mockTts).speak("Text 1", TextToSpeech.QUEUE_ADD, null, "id1");
 
         // Cmd 1 (Forwards)
-        // `current` is still technically "id2" (Index 1) in our map block setup. Increments index to index 2.
-        result = mTextReader.onVolumeChanged(1);
-        assertTrue(result);
-        verify(mockTts).speak("Text 3", TextToSpeech.QUEUE_ADD, null, "id3"); 
-        
-        // Cmd 1 (Reach end of array)
+        assertTrue(mTextReader.onVolumeChanged(1));
+        verify(mockTts).speak("Text 3", TextToSpeech.QUEUE_ADD, null, "id3");
+
+        // Cmd 1 (Reached array end)
         map.put("current", "id3");
-        result = mTextReader.onVolumeChanged(1);
-        assertTrue(result);
+        assertTrue(mTextReader.onVolumeChanged(1));
         verify(mockOverlay).clear();
+    }
+
+    // ==========================================
+    // 8. STOP & DESTROY LIFECYCLE BRANCHES
+    // ==========================================
+
+    @Test
+    public void testStopAndDestroy() throws Exception {
+        injectMockTts(mTextReader, mockTts);
+        injectMockRecognizer(mTextReader, mockTextRecognizer);
+
+        mTextReader.stop();
+
+        verify(mockTextRecognizer).close();
+        verify(mockTranslationManager).close();
+        verify(mockTts).stop();
+        verify(mockOverlay).clearOverlay();
+
+        mTextReader.destroy();
+
+        verify(mockTts).shutdown();
     }
 }

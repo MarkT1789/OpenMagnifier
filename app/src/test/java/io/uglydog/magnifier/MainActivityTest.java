@@ -19,6 +19,7 @@ package io.uglydog.magnifier;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -577,8 +578,6 @@ public class MainActivityTest {
     public void testOnChangeFlashlightSetting_OlderSdk_FlatToggleBranch() {
         when(mockImageView.getVisibility()).thenReturn(View.GONE);
         
-        // Use loose floating match structures to verify toggling behaviors safely 
-        // regardless of the baseline state set up during initialization.
         KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_F);
         activity.onChangeFlashlightSetting(event);
         
@@ -590,14 +589,12 @@ public class MainActivityTest {
     public void testGetNextString_UnmatchedValue_ReturnsNegativeOneBranch() {
         MainActivity spyAct = getSpyActivityWithMockResources();
         when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
-        // Explicit unmatched configuration ensures loop fallback paths execution internally
         when(mockSettingsManager.getBrightness()).thenReturn(999.0f); 
         
         KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_B);
         try {
             spyAct.onChangeBrightnessSetting(event);
         } catch (ArrayIndexOutOfBoundsException e) {
-            // Verifies array validation limitations by checking the resulting index tracking error bounds
             assertNotNull(e);
         }
     }
@@ -607,15 +604,12 @@ public class MainActivityTest {
         MainActivity spyAct = getSpyActivityWithMockResources();
         when(mockImageView.getVisibility()).thenReturn(View.GONE);
         
-        // Mock max camera zoom bounds tightly at 5.0f
         MutableLiveData<ZoomState> zoomLiveData = new MutableLiveData<>();
         ZoomState mockZoomState = mock(ZoomState.class);
         when(mockZoomState.getMaxZoomRatio()).thenReturn(5.0f);
         zoomLiveData.setValue(mockZoomState);
         when(mockCameraInfo.getZoomState()).thenReturn(zoomLiveData);
         
-        // 6.0 exists in your mocked R.array.zoom_values, meaning getNextString returns a valid index, 
-        // but 6.0 > 5.0f max camera constraint, triggering the backward correction loop branch!
         when(mockSettingsManager.getZoom()).thenReturn(6.0f); 
         
         KeyEvent shiftEvent = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Z, 0, KeyEvent.META_SHIFT_ON);
@@ -641,5 +635,163 @@ public class MainActivityTest {
         boolean toggled = activity.onToggleMode();
         assertTrue(toggled);
         verify(mockTextReader).stop();
+    }
+
+    // --- Flashlight Level & SDK Specific Edge Cases ---
+
+    @Test
+    public void testOnChangeFlashlightSetting_TiramisuFlashLevels_ForwardAndShift() {
+        MainActivity spyAct = getSpyActivityWithMockResources();
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        when(mockCameraInfo.getMaxTorchStrengthLevel()).thenReturn(5);
+        when(spyAct.getResources().getStringArray(R.array.flashlight_values)).thenReturn(new String[]{"0.0", "0.5", "1.0"});
+        when(spyAct.getResources().getStringArray(R.array.flashlight_entries)).thenReturn(new String[]{"Off", "Medium", "High"});
+        
+        when(mockSettingsManager.getFlashlight()).thenReturn(0.0f);
+
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_F);
+        spyAct.onChangeFlashlightSetting(event);
+        verify(mockSettingsManager).setFlashlight(0.5f);
+
+        // Update stubbed value for the second call so getNextString computes from 0.5f back to 0.0f
+        when(mockSettingsManager.getFlashlight()).thenReturn(0.5f);
+
+        KeyEvent shiftEvent = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_F, 0, KeyEvent.META_SHIFT_ON);
+        spyAct.onChangeFlashlightSetting(shiftEvent);
+        verify(mockSettingsManager).setFlashlight(0.0f);
+    }
+
+    @Test
+    public void testToggleFlashlight_NullCamera_DoesNothing() {
+        when(mockCameraManager.getCamera()).thenReturn(null);
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+
+        activity.onResume();
+        verify(mockCameraControl, never()).enableTorch(anyBoolean());
+    }
+
+    @Test
+    public void testToggleFlashlight_NoFlashUnit_DoesNothing() {
+        when(mockCameraInfo.hasFlashUnit()).thenReturn(false);
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+
+        activity.onResume();
+        verify(mockCameraControl, never()).enableTorch(anyBoolean());
+    }
+
+    @Test
+    public void testToggleFlashlight_StrengthLevelCalculation_ClampsZeroToOne() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        when(mockCameraInfo.getMaxTorchStrengthLevel()).thenReturn(10);
+        when(mockSettingsManager.getFlashlight()).thenReturn(0.05f);
+
+        activity.onResume();
+        verify(mockCameraControl).setTorchStrengthLevel(1);
+        verify(mockCameraControl).enableTorch(true);
+    }
+
+    // --- Camera & Zoom Edge Cases ---
+
+    @Test
+    public void testOnScale_NullZoomState_DoesNothing() {
+        MutableLiveData<ZoomState> nullLiveData = new MutableLiveData<>(null);
+        when(mockCameraInfo.getZoomState()).thenReturn(nullLiveData);
+
+        activity.onScale(1.5f, true);
+        verify(mockCameraControl, never()).setZoomRatio(anyFloat());
+    }
+
+    @Test
+    public void testOnScale_MinZoomRatio_ClampsToMin() {
+        MutableLiveData<ZoomState> zoomLiveData = new MutableLiveData<>();
+        ZoomState mockZoomState = mock(ZoomState.class);
+        when(mockZoomState.getZoomRatio()).thenReturn(2.0f);
+        when(mockZoomState.getMaxZoomRatio()).thenReturn(5.0f);
+        when(mockZoomState.getMinZoomRatio()).thenReturn(1.0f);
+        zoomLiveData.setValue(mockZoomState);
+        when(mockCameraInfo.getZoomState()).thenReturn(zoomLiveData);
+
+        activity.onScale(0.1f, false);
+        verify(mockCameraControl).setZoomRatio(1.0f);
+    }
+
+    @Test
+    public void testOnChangeZoomSetting_LiveCamera_ExceedsMaxZoom_ForwardWrapBranch() {
+        MainActivity spyAct = getSpyActivityWithMockResources();
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+
+        MutableLiveData<ZoomState> zoomLiveData = new MutableLiveData<>();
+        ZoomState mockZoomState = mock(ZoomState.class);
+        when(mockZoomState.getMaxZoomRatio()).thenReturn(3.0f);
+        zoomLiveData.setValue(mockZoomState);
+        when(mockCameraInfo.getZoomState()).thenReturn(zoomLiveData);
+
+        when(mockSettingsManager.getZoom()).thenReturn(6.0f);
+
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Z);
+        spyAct.onChangeZoomSetting(event);
+
+        verify(mockSettingsManager).setZoom(1.0f);
+        verify(mockCameraControl).setZoomRatio(1.0f);
+    }
+
+    @Test
+    public void testOnChangeZoomSetting_LiveCamera_NullZoomState_DoesNothing() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        MutableLiveData<ZoomState> nullLiveData = new MutableLiveData<>(null);
+        when(mockCameraInfo.getZoomState()).thenReturn(nullLiveData);
+
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Z);
+        activity.onChangeZoomSetting(event);
+
+        verify(mockSettingsManager, never()).setZoom(anyFloat());
+    }
+
+    // --- Mode Toggling & Input Action Edge Cases ---
+
+    @Test
+    public void testOnToggleMode_AlreadyProcessing_ReturnsFalse() throws Exception {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+
+        Field field = MainActivity.class.getDeclaredField("mIsProcessing");
+        field.setAccessible(true);
+        field.set(activity, true);
+
+        boolean result = activity.onToggleMode();
+        assertFalse(result);
+        verify(mockCameraManager, never()).takePhoto(any(), any());
+    }
+
+    @Test
+    public void testOnToggleMode_FromImageToLiveView_NullZoomState() {
+        when(mockImageView.getVisibility()).thenReturn(View.VISIBLE);
+        MutableLiveData<ZoomState> nullLiveData = new MutableLiveData<>(null);
+        when(mockCameraInfo.getZoomState()).thenReturn(nullLiveData);
+
+        boolean handled = activity.onToggleMode();
+
+        assertTrue(handled);
+        verify(mockTextReader).stop();
+        verify(mockTextReaderOverlay).clearOverlay();
+    }
+
+    @Test
+    public void testOnOpenSettings_StartsSettingsActivity() {
+        activity.onOpenSettings();
+        Intent startedIntent = Shadows.shadowOf((Application) ApplicationProvider.getApplicationContext()).getNextStartedActivity();
+        assertNotNull(startedIntent);
+        assertEquals(SettingsActivity.class.getName(), startedIntent.getComponent().getClassName());
+    }
+
+    // --- OnTouchEvent Fallback ---
+
+    @Test
+    public void testOnTouchEvent_NotVisible_DispatchesToGestureDetectors() {
+        when(mockImageView.getVisibility()).thenReturn(View.GONE);
+        MotionEvent event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+
+        boolean handled = activity.onTouchEvent(event);
+        assertTrue(handled);
+        event.recycle();
     }
 }
