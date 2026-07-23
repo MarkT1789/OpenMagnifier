@@ -258,9 +258,9 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
                 color = "#1E3A8A";
             }
 
-            // 8 - yellow
+            // 8 - green
             if ((bannerHighlight & 0x08) == 0x08) {
-                color = "#FEF08A";
+                color = "#BBF7D0";
             }
 
             // 4 - font color
