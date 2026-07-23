@@ -373,7 +373,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
                     mTextPaint.setColor(Color.YELLOW);
                     mBackgroundPaint.setColor(Color.BLACK);
                 break;
-                case 3: /* black on yellow *
+                case 3: /* black on yellow */
                     mTextPaint.setColor(Color.BLACK);
                     mBackgroundPaint.setColor(Color.YELLOW);
                 break;
