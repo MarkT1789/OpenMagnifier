@@ -28,8 +28,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.Layout;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.StaticLayout;
 import android.text.TextPaint;
+import android.text.style.BackgroundColorSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.UnderlineSpan;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -63,6 +68,8 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     private int mStart;
     private int mBannerColor;
     private int mBannerFont;
+    private int mWordStart;
+    private int mWordEnd;
 
     private boolean mShowCopyright;
     private boolean mShowBackground;
@@ -179,6 +186,9 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
             mMainHandler.removeMessages(MSG_CLEAR_BACKGROUND);
         }
 
+        mWordStart = start;
+        mWordEnd = end;
+
         if (text != null && mTts != null) {
             if (mTts.equals(text)) {
                 if (mCount != 0) {
@@ -237,7 +247,53 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
 
             final TextPaint textPaint = new TextPaint();
             textPaint.set(mTextPaint);
-            StaticLayout staticLayout = StaticLayout.Builder.obtain(str, 0, str.length(), textPaint, width)
+
+            final int bannerHighlight = mSettingsManager.getBannerHighlight();
+            final SpannableString spannable = new SpannableString(str);
+
+            String color = null;
+
+            // 16 - blue
+            if ((bannerHighlight & 0x10) == 0x10) {
+                color = "#1E3A8A";
+            }
+
+            // 8 - yellow
+            if ((bannerHighlight & 0x08) == 0x08) {
+                color = "#FEF08A";
+            }
+
+            // 4 - font color
+            if ((bannerHighlight & 0x04) == 0x04 && color != null) {
+                spannable.setSpan(
+                    new ForegroundColorSpan(Color.parseColor(color)),
+                    mWordStart - mStart,
+                    mWordEnd - mStart,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
+            }
+
+            // 2 - highlight
+            if ((bannerHighlight & 0x02) == 0x02 && color != null) {
+                spannable.setSpan(
+                    new BackgroundColorSpan(Color.parseColor(color)),
+                    mWordStart - mStart,
+                    mWordEnd - mStart,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
+            }
+
+            // 1 - underline
+            if ((bannerHighlight & 0x01) == 0x01) {
+                spannable.setSpan(
+                    new UnderlineSpan(),
+                    mWordStart - mStart,
+                    mWordEnd - mStart,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
+            }
+
+            StaticLayout staticLayout = StaticLayout.Builder.obtain(spannable, 0, spannable.length(), textPaint, width)
                     .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                     .setLineSpacing(4.0f, 1.0f)
                     .setMaxLines(mSettingsManager.getBanner())

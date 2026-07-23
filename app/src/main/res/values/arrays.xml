@@ -258,6 +258,31 @@
         <item>12</item>
     </string-array>
 
+    <string-array name="banner_highlight_entries">
+        <item>@string/entries_disabled</item>
+        <item>@string/entries_highlight_underline</item>
+        <item>@string/entries_highlight_yellow</item>
+        <item>@string/entries_highlight_blue</item>
+        <item>@string/entries_highlight_yellow_underline</item>
+        <item>@string/entries_highlight_blue_underline</item>
+        <item>@string/entries_highlight_yellow_font</item>
+        <item>@string/entries_highlight_blue_font</item>
+        <item>@string/entries_highlight_yellow_font_underline</item>
+        <item>@string/entries_highlight_blue_font_underline</item>
+    </string-array>
+    <string-array name="banner_highlight_values">
+        <item>0</item>
+        <item>1</item>
+        <item>10</item>
+        <item>18</item>
+        <item>11</item>
+        <item>19</item>
+        <item>12</item>
+        <item>20</item>
+        <item>13</item>
+        <item>21</item>
+    </string-array>
+
     <string-array name="volume_entries">
         <item>@string/entries_disabled</item>
         <item>@string/entries_enabled</item>

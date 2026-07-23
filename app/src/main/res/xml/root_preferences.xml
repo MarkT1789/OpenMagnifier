@@ -124,6 +124,14 @@
 
         <ListPreference
             app:defaultValue="0"
+            app:entries="@array/banner_highlight_entries"
+            app:entryValues="@array/banner_highlight_values"
+            app:key="banner_highlight_setting"
+            app:title="@string/settings_banner_highlight"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0"
             app:entries="@array/volume_entries"
             app:entryValues="@array/volume_values"
             app:key="volume_setting"
