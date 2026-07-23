@@ -81,6 +81,7 @@ public class TextReader implements Handler.Callback {
 
     private volatile boolean mTtsReady;
     private volatile boolean mIsDestroyed;
+    private volatile boolean mIsRunning;
     private volatile boolean mTtsStarting;
 
     private volatile int mCurrentTaskToken = 0;
@@ -139,7 +140,7 @@ public class TextReader implements Handler.Callback {
                     if (r == null || r.mIsDestroyed || r.mTextReaderOverlay == null || r.mSettingsManager.getBanner() == 0) return;
 
                     final String text = r.mHashMap.get(utteranceId);
-                    if (text != null) {
+                    if (text != null && reader.mIsRunning) {
                         r.mTextReaderOverlay.setText(text, start, end);
                     }
                 }
@@ -433,6 +434,7 @@ public class TextReader implements Handler.Callback {
         mTtsReady = false;
         mTtsStarting = false;
         mIsDestroyed = false;
+        mIsRunning = false;
         mTextRecognizer = null;
         mTranslationManager = translationManager;
         mTts = null;
@@ -511,6 +513,7 @@ public class TextReader implements Handler.Callback {
 
     public void stop() {
         if (BuildConfig.DEBUG) Logger.d(TAG, "stop");
+        mIsRunning = false;
         mMainHandler.removeMessages(MSG_SPEAK);
         mBackgroundHandler.removeCallbacksAndMessages(null);
         if (mTextRecognizer != null) {
@@ -536,6 +539,7 @@ public class TextReader implements Handler.Callback {
         if (mSettingsManager.getSpeak() != 0 && !mIsDestroyed) {
             mMainHandler.sendEmptyMessageDelayed(MSG_SPEAK, 2000);
         }
+        mIsRunning = true;
     }
 
     private void shouldSpeak() {
