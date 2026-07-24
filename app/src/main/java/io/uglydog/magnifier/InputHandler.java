@@ -62,7 +62,7 @@ public class InputHandler {
 
         if (isFirstKeyDown) {
             // Uses the injected formatter instead of the static Android method directly
-            Logger.d(TAG, "handleKey: " + keyFormatter.getKeyCodeString(event));
+            if (BuildConfig.DEBUG) Logger.d(TAG, "handleKey: " + keyFormatter.getKeyCodeString(event));
         }
 
         switch (event.getKeyCode()) {

@@ -17,6 +17,7 @@
 
 package io.uglydog.magnifier;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -53,6 +54,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
 
     private static final String TAG = ShareActivity.class.getSimpleName();
     private static final String FILE = "shared_image.jpg";
+    private static final int MAX_FILE_SIZE = 50 * 1024 * 1024;
 
     private SubsamplingScaleImageView mImageView;
     private SettingsManager mSettingsManager;
@@ -69,9 +71,11 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     /**
      * Set a custom or mock factory for testing purposes.
      */
-    @VisibleForTesting
-    public void setTranslationFactory(TranslationManager.TranslationFactory factory) {
-        this.mTranslationFactory = factory;
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    void setTranslationFactory(TranslationManager.TranslationFactory factory) {
+        if (BuildConfig.DEBUG) {
+            this.mTranslationFactory = factory;
+        }
     }
 
     @Override
@@ -245,7 +249,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         mExecutorService.execute(new Runnable() {
             @Override
             public void run() {
-                final boolean success = getFileFromContentUri(ShareActivity.this, imageUri);
+                final boolean success = getFileFromContentUri(ShareActivity.this, imageUri, intent);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -281,7 +285,31 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
     }
 
-    private boolean getFileFromContentUri(@NonNull final Context context, @NonNull final Uri contentUri) {
+    private boolean getFileFromContentUri(@NonNull final Context context, @NonNull final Uri contentUri, Intent intent) {
+
+        if (contentUri == null) {
+            Logger.e(TAG, "getFileFromContentUri: uri is null");
+            return false;
+        }
+
+        final String scheme = contentUri.getScheme();
+        if (!ContentResolver.SCHEME_CONTENT.equalsIgnoreCase(scheme)) {
+            Logger.e(TAG, "getFileFromContentUri: unsupported URI scheme: " + scheme);
+            return false;
+        }
+
+        if ((intent.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION) == 0) {
+            Logger.e(TAG, "getFileFromContentUri: read permission was not granted");
+            return false;
+        }
+
+        final ContentResolver resolver = context.getContentResolver();
+        final String mimeType = resolver.getType(contentUri);
+        if (mimeType == null || !mimeType.startsWith("image/")) {
+            Logger.e(TAG, "getFileFromContentUri: invalid MIME type: " + mimeType);
+            return false;
+        }
+
         Logger.i(TAG, "getFileFromContentUri " + FILE);
         final File tempFile = new File(context.getCacheDir(), FILE);
         InputStream inputStream = null;
@@ -297,8 +325,18 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
 
             final byte[] buffer = new byte[4096];
             int bytesRead;
+            int bytesCount = 0;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
+                bytesCount += bytesRead;
+                if (bytesCount > MAX_FILE_SIZE) {
+                    inputStream.close();
+                    outputStream.close();
+                    if (tempFile.exists()) {
+                        tempFile.delete();
+                    }
+                    return false;
+                }
             }
             success = true;
         } catch (Exception e) {

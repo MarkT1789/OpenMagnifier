@@ -155,9 +155,7 @@ public class TranslationManager implements ITranslationManager {
             final TranslationManager manager = mManagerRef.get();
             final TextToSpeech tts = mTtsRef.get();
             if (manager != null && tts != null) {
-                if (BuildConfig.DEBUG) {
-                    Logger.d(TAG, "translate: success: " + translatedText);
-                }
+                if (BuildConfig.DEBUG) Logger.d(TAG, "translate: success: " + translatedText);
                 manager.setTtsLanguage(mTargetId, tts);
                 if (!mHashMap.containsKey(mTextId)) {
                     mHashMap.put(mTextId, translatedText);
@@ -192,9 +190,7 @@ public class TranslationManager implements ITranslationManager {
             final TranslationManager manager = mManagerRef.get();
             final TextToSpeech tts = mTtsRef.get();
             if (manager != null && tts != null) {
-                if (BuildConfig.DEBUG) {
-                    Logger.d(TAG, "translate: failed: " + e);
-                }
+                if (BuildConfig.DEBUG) Logger.d(TAG, "translate: failed: " + e);
                 manager.setTtsLanguage(mSourceId, tts);
                 if (!mHashMap.containsKey(mTextId)) {
                     mHashMap.put(mTextId, mOriginalText);
@@ -207,9 +203,7 @@ public class TranslationManager implements ITranslationManager {
 
     @Override
     public synchronized void prepare(final int sourceId, final int targetId) {
-        if (BuildConfig.DEBUG) {
-            Logger.d(TAG, "prepare: source=" + sourceId + " targetId=" + targetId);
-        }
+        if (BuildConfig.DEBUG) Logger.d(TAG, "prepare: source=" + sourceId + " targetId=" + targetId);
 
         if (sourceId == targetId || sourceId == 0 || targetId == 0) {
             close();
@@ -257,9 +251,7 @@ public class TranslationManager implements ITranslationManager {
     @Override
     public synchronized void translate(@NonNull final TextToSpeech tts, @NonNull final HashMap<String, String> hashMap, final ArrayList<String> arrayList, @NonNull final String text, @NonNull final String id) {
         if (!mIsReady || mTranslator == null) {
-            if (BuildConfig.DEBUG) {
-                Logger.d(TAG, "translate: not ready: " + text);
-            }
+            if (BuildConfig.DEBUG) Logger.d(TAG, "translate: not ready: " + text);
             setTtsLanguage(0, tts);
             if (!hashMap.containsKey(id)) {
                 hashMap.put(id, text);

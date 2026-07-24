@@ -207,14 +207,18 @@ public class ShareActivityTest {
         android.content.ContentResolver mockResolver = mock(android.content.ContentResolver.class);
         Uri mockUri = Uri.parse("content://test");
 
+        Intent mockIntent = new Intent();
+        mockIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
         when(mockContext.getContentResolver()).thenReturn(mockResolver);
+        when(mockResolver.getType(mockUri)).thenReturn("image/jpeg");
         when(mockResolver.openInputStream(mockUri)).thenReturn(null);
 
         java.lang.reflect.Method method = ShareActivity.class.getDeclaredMethod(
-                "getFileFromContentUri", Context.class, Uri.class);
+                "getFileFromContentUri", Context.class, Uri.class, Intent.class);
         method.setAccessible(true);
         
-        Boolean result = (Boolean) method.invoke(spyActivity, mockContext, mockUri);
+        Boolean result = (Boolean) method.invoke(spyActivity, mockContext, mockUri, mockIntent);
         assertTrue(!result);
     }
 
@@ -226,11 +230,14 @@ public class ShareActivityTest {
         Context context = RuntimeEnvironment.getApplication();
         Uri invalidUri = Uri.parse("content://unregistered.authority/nonexistent_file.jpg");
 
+        Intent mockIntent = new Intent();
+        mockIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
         java.lang.reflect.Method method = ShareActivity.class.getDeclaredMethod(
-                "getFileFromContentUri", Context.class, Uri.class);
+                "getFileFromContentUri", Context.class, Uri.class, Intent.class);
         method.setAccessible(true);
         
-        Boolean result = (Boolean) method.invoke(spyActivity, context, invalidUri);
+        Boolean result = (Boolean) method.invoke(spyActivity, context, invalidUri, mockIntent);
         assertTrue(!result);
     }
 

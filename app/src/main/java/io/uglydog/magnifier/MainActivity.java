@@ -48,6 +48,7 @@ import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
@@ -106,8 +107,11 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     private ITranslationManager mTranslationManager;
 
     // Setter for Unit Testing
-    public void setTranslationManager(ITranslationManager translationManager) {
-        this.mTranslationManager = translationManager;
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    void setTranslationManager(ITranslationManager translationManager) {
+        if (BuildConfig.DEBUG) {
+            this.mTranslationManager = translationManager;
+        }
     }
 
     /*

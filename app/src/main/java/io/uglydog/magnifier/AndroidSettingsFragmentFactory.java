@@ -16,16 +16,20 @@
  */
 
 package io.uglydog.magnifier;
+import androidx.annotation.VisibleForTesting;
 
 public class AndroidSettingsFragmentFactory {
-    private static ISettingsHelper helper = new SettingsHelper();
+    private static volatile ISettingsHelper helper = new SettingsHelper();
 
     public static ISettingsHelper getSettingsHelper() {
         return helper;
     }
 
     // Used for unit testing to inject a mock
-    public static void setSettingsHelper(ISettingsHelper mockHelper) {
-        helper = mockHelper;
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    static void setSettingsHelper(ISettingsHelper mockHelper) {
+        if (BuildConfig.DEBUG) {
+            helper = mockHelper;
+        }
     }
 }

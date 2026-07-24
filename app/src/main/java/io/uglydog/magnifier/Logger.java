@@ -20,7 +20,7 @@ package io.uglydog.magnifier;
 public class Logger {
     public static void d(final String tag, final String message) {
         try {
-            android.util.Log.d(tag, message);
+            if (BuildConfig.DEBUG) android.util.Log.d(tag, message);
         } catch (RuntimeException e) {
             System.out.println("[" + tag + "] DEBUG: " + message);
         }
