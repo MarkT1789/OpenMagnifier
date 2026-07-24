@@ -327,6 +327,11 @@ public class TextReaderTest {
         mapField.setAccessible(true);
         HashMap<String, String> map = (HashMap<String, String>) mapField.get(mTextReader);
 
+        // Set mIsRunning to true so onRangeStart condition passes
+        Field runningField = TextReader.class.getDeclaredField("mIsRunning");
+        runningField.setAccessible(true);
+        runningField.set(mTextReader, true);
+
         // Standard test
         map.put("10:10:20:20", "Test Banner Text");
         listener.onStart("10:10:20:20");
