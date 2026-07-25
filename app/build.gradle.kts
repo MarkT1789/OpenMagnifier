@@ -74,8 +74,11 @@ android {
                 // Give the test worker process 2GB of memory
                 it.maxHeapSize = "2g"
 
-                // Restart the test process every 50-100 classes to flush memory
+                // Restart the test process every 100 classes to flush memory
                 it.forkEvery = 100
+
+                // Parallet test execution
+                it.maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { cores -> cores > 0 } ?: 1
 
                 // Configures the underlying JaCoCo engine safely
                 it.extensions.configure(org.gradle.testing.jacoco.plugins.JacocoTaskExtension::class.java) {
