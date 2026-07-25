@@ -54,7 +54,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
 
     private static final String TAG = ShareActivity.class.getSimpleName();
     private static final String FILE = "shared_image.jpg";
-    private static final int MAX_FILE_SIZE = 50 * 1024 * 1024;
+    private static final int MAX_FILE_SIZE = 80 * 1024 * 1024;
 
     private SubsamplingScaleImageView mImageView;
     private SettingsManager mSettingsManager;
@@ -293,13 +293,8 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
         }
 
         final String scheme = contentUri.getScheme();
-        if (!ContentResolver.SCHEME_CONTENT.equalsIgnoreCase(scheme)) {
+        if (scheme == null || !ContentResolver.SCHEME_CONTENT.equalsIgnoreCase(scheme)) {
             Logger.e(TAG, "getFileFromContentUri: unsupported URI scheme: " + scheme);
-            return false;
-        }
-
-        if ((intent.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION) == 0) {
-            Logger.e(TAG, "getFileFromContentUri: read permission was not granted");
             return false;
         }
 
@@ -323,7 +318,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
             }
             outputStream = new FileOutputStream(tempFile);
 
-            final byte[] buffer = new byte[4096];
+            final byte[] buffer = new byte[16384];
             int bytesRead;
             int bytesCount = 0;
             while ((bytesRead = inputStream.read(buffer)) != -1) {

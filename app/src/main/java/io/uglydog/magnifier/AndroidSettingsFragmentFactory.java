@@ -27,7 +27,7 @@ public class AndroidSettingsFragmentFactory {
 
     // Used for unit testing to inject a mock
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    static void setSettingsHelper(ISettingsHelper mockHelper) {
+    static synchronized void setSettingsHelper(ISettingsHelper mockHelper) {
         if (BuildConfig.DEBUG) {
             helper = mockHelper;
         }
