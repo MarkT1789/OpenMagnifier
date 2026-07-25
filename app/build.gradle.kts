@@ -71,6 +71,12 @@ android {
 
             // Forces coverage tracking engines to accept Robolectric runtime classes
             all {
+                // Give the test worker process 2GB of memory
+                it.maxHeapSize = "2g"
+
+                // Restart the test process every 50-100 classes to flush memory
+                it.forkEvery = 100
+
                 // Configures the underlying JaCoCo engine safely
                 it.extensions.configure(org.gradle.testing.jacoco.plugins.JacocoTaskExtension::class.java) {
                     isIncludeNoLocationClasses = true
