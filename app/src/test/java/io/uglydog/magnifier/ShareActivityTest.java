@@ -253,17 +253,24 @@ public class ShareActivityTest {
     // ==========================================
 
     @Test
-    public void testHandleIntent_NullIntent_Finishes() {
-        createActivityWithIntent(null);
+    public void testHandleIntent_NullIntent_Finishes() throws Exception {
+        createActivityWithIntent(createValidIntent());
+        mController.create();
+
         ShareActivity spyActivity = spy(mActivity);
 
-        spyActivity.onNewIntent(null);
+        Method method = ShareActivity.class.getDeclaredMethod("handleIntent", Intent.class);
+        method.setAccessible(true);
+        method.invoke(spyActivity, (Intent) null);
+
         verify(spyActivity).finish();
     }
 
     @Test
     public void testHandleIntent_NullTypeOrAction_Finishes() {
-        createActivityWithIntent(new Intent());
+        createActivityWithIntent(createValidIntent());
+        mController.create();
+
         ShareActivity spyActivity = spy(mActivity);
         Intent badIntent = new Intent();
 
@@ -273,7 +280,9 @@ public class ShareActivityTest {
 
     @Test
     public void testHandleIntent_InvalidAction_Finishes() {
-        createActivityWithIntent(new Intent());
+        createActivityWithIntent(createValidIntent());
+        mController.create();
+
         ShareActivity spyActivity = spy(mActivity);
         Intent badActionIntent = new Intent(Intent.ACTION_VIEW);
         badActionIntent.setType("image/jpeg");
@@ -284,7 +293,9 @@ public class ShareActivityTest {
 
     @Test
     public void testHandleIntent_NonImageType_Finishes() {
-        createActivityWithIntent(new Intent());
+        createActivityWithIntent(createValidIntent());
+        mController.create();
+
         ShareActivity spyActivity = spy(mActivity);
         Intent badTypeIntent = new Intent(Intent.ACTION_SEND);
         badTypeIntent.setType("text/plain");
@@ -300,7 +311,9 @@ public class ShareActivityTest {
     @Test
     @Config(sdk = Build.VERSION_CODES.TIRAMISU)
     public void testHandleSingleImage_NullUri_Finishes_Tiramisu() {
-        createActivityWithIntent(new Intent());
+        createActivityWithIntent(createValidIntent());
+        mController.create();
+
         ShareActivity spyActivity = spy(mActivity);
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("image/jpeg");
@@ -313,7 +326,9 @@ public class ShareActivityTest {
     @Test
     @Config(sdk = Build.VERSION_CODES.P)
     public void testHandleSingleImage_NullUri_Finishes_PreTiramisu() {
-        createActivityWithIntent(new Intent());
+        createActivityWithIntent(createValidIntent());
+        mController.create();
+
         ShareActivity spyActivity = spy(mActivity);
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("image/jpeg");
