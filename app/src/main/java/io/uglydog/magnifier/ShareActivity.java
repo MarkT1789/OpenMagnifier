@@ -61,6 +61,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     private TextReader mTextReader;
     private TextReaderOverlay mTextReaderOverlay;
     private ToastManager mToastManager;
+    private ClipboardUtil mClipboardUtil;
     private InputHandler mInputHandler;
 
     // Dependency Injection: Default instance that can be swapped out in unit tests
@@ -87,6 +88,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
 
         setupWindow();
         mToastManager = new ToastManager(new AndroidToastManagerFactory());
+        mClipboardUtil = new ClipboardUtil(this, mToastManager);
 
         mImageView = findViewById(R.id.ivLastCapture);
         if (mImageView == null) {
@@ -258,7 +260,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
                         if (success) {
                             // Using the injected Factory interface to decouple instantiation
                             ITranslationManager translationManager = mTranslationFactory.create(ShareActivity.this, mTextReaderOverlay, mToastManager);
-                            mTextReader = new TextReader(ShareActivity.this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, translationManager);
+                            mTextReader = new TextReader(ShareActivity.this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, translationManager, mClipboardUtil);
                             mImageView.setImage(ImageSource.uri(Uri.fromFile(new File(getCacheDir(), FILE))));
                             mTextReader.start();
                         } else {

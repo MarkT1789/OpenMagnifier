@@ -84,6 +84,7 @@ public class TextReaderTest {
     @Mock private TextReaderOverlay mockOverlay;
     @Mock private SettingsManager mockSettings;
     @Mock private ITranslationManager mockTranslationManager;
+    @Mock private ClipboardUtil mockClipboardUtil;
     @Mock private TextRecognizer mockTextRecognizer;
     @Mock private Task<Text> mockTask;
     @Mock private TextToSpeech mockTts;
@@ -108,7 +109,8 @@ public class TextReaderTest {
                 mockOverlay,
                 "test_file.jpg",
                 mockSettings,
-                mockTranslationManager
+                mockTranslationManager,
+                mockClipboardUtil
         );
     }
 
@@ -310,7 +312,7 @@ public class TextReaderTest {
         listener.onInit(TextToSpeech.ERROR);
 
         // WeakReference GC / Destroyed branch
-        TextReader nullReader = new TextReader(mContext, mockImageView, mockOverlay, "test_file.jpg", mockSettings, mockTranslationManager);
+        TextReader nullReader = new TextReader(mContext, mockImageView, mockOverlay, "test_file.jpg", mockSettings, mockTranslationManager, mockClipboardUtil);
         TextToSpeech.OnInitListener listenerNull = (TextToSpeech.OnInitListener) constructor.newInstance(nullReader, Locale.US);
         nullReader.destroy();
         listenerNull.onInit(TextToSpeech.SUCCESS);
@@ -351,7 +353,7 @@ public class TextReaderTest {
         listener.onRangeStart("10:10:20:20", 0, 4, 0);
 
         // WeakReference / null / destroyed branch
-        TextReader destroyedReader = new TextReader(mContext, mockImageView, mockOverlay, "test_file.jpg", mockSettings, mockTranslationManager);
+        TextReader destroyedReader = new TextReader(mContext, mockImageView, mockOverlay, "test_file.jpg", mockSettings, mockTranslationManager, mockClipboardUtil);
         UtteranceProgressListener destroyedListener = (UtteranceProgressListener) constructor.newInstance(destroyedReader);
         destroyedReader.destroy();
 

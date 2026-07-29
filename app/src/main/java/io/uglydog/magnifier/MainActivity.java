@@ -97,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     private TextReader mTextReader;
     private TextReaderOverlay mTextReaderOverlay;
     private ToastManager mToastManager;
+    private ClipboardUtil mClipboardUtil;
 
     private static final int MSG_FLASHLIGHT_OFF = 1;
     private static final int MSG_IMAGE_OFF = 2;
@@ -126,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         setupWindow();
 
         mToastManager = new ToastManager(new AndroidToastManagerFactory());
+        mClipboardUtil = new ClipboardUtil(this, mToastManager);
         mImageView = findViewById(R.id.ivLastCapture);
         mImageView.setMinimumScaleType(SubsamplingScaleImageView.SCALE_TYPE_CENTER_CROP);
 
@@ -143,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             mTranslationManager = new TranslationManager(this, mTextReaderOverlay, mToastManager);
         }
 
-        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, mTranslationManager);
+        mTextReader = new TextReader(this, mImageView, mTextReaderOverlay, FILE, mSettingsManager, mTranslationManager, mClipboardUtil);
 
         showSplashDialog(false);
         updateFilters();

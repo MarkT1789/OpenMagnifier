@@ -74,6 +74,7 @@ public class TextReader implements Handler.Callback {
     private final Handler mBackgroundHandler;
     private final HandlerThread mBackgroundThread;
     private final SettingsManager mSettingsManager;
+    private final ClipboardUtil mClipboardUtil;
     private final Context mContext;
 
     private TextRecognizer mTextRecognizer;
@@ -425,12 +426,13 @@ public class TextReader implements Handler.Callback {
     }
 
     // Constructor modified to support Dependency Injection via the interface
-    public TextReader(final Context context, final SubsamplingScaleImageView imageView, final TextReaderOverlay overlay, final String file, final SettingsManager settings, final ITranslationManager translationManager) {
+    public TextReader(final Context context, final SubsamplingScaleImageView imageView, final TextReaderOverlay overlay, final String file, final SettingsManager settings, final ITranslationManager translationManager, ClipboardUtil clipboardUtil) {
         mContext = context;
         mImageView = imageView;
         mTextReaderOverlay = overlay;
         mFile = new File(context.getCacheDir(), file);
         mSettingsManager = settings;
+        mClipboardUtil = clipboardUtil;
         mTtsReady = false;
         mTtsStarting = false;
         mIsDestroyed = false;
@@ -529,6 +531,9 @@ public class TextReader implements Handler.Callback {
         }
         if (mTextReaderOverlay != null) {
             mTextReaderOverlay.clearOverlay();
+        }
+        if (mSettingsManager.getClipboard() != 0) {
+            mClipboardUtil.copy(mArrayList, mHashMap);
         }
     }
 

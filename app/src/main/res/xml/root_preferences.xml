@@ -138,6 +138,14 @@
             app:title="@string/settings_volume"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/clipboard_entries"
+            app:entryValues="@array/clipboard_values"
+            app:key="clipboard_setting"
+            app:title="@string/settings_clipboard"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

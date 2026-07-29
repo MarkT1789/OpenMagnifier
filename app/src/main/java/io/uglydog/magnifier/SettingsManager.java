@@ -44,10 +44,11 @@ public class SettingsManager {
     private static final String KEY_BANNER_COLOR = "banner_color_setting";
     private static final String KEY_BANNER_FONT = "banner_font_setting";
     private static final String KEY_BANNER_HIGHLIGHT = "banner_highlight_setting";
+    private static final String KEY_CLIPBOARD = "clipboard_setting";
 
     private final SharedPreferences mPrefs;
     private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight, mBannerSize;
-    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont, mBannerHighlight;
+    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont, mBannerHighlight, mClipboard;
     private String mSplashVersion;
 
     public SettingsManager(@NonNull final SharedPreferences sharedPreferences) {
@@ -74,6 +75,7 @@ public class SettingsManager {
         mBannerColor = getInt(KEY_BANNER_COLOR, 0);
         mBannerFont = getInt(KEY_BANNER_FONT, 0);
         mBannerHighlight = getInt(KEY_BANNER_HIGHLIGHT, 0);
+        mClipboard = getInt(KEY_CLIPBOARD, 0);
     }
 
     public synchronized float getBrightness() {
@@ -236,6 +238,15 @@ public class SettingsManager {
     public synchronized void setBannerHighlight(final int bannerHighlight) {
         mBannerHighlight = bannerHighlight;
         setInt(KEY_BANNER_HIGHLIGHT, bannerHighlight);
+    }
+
+    public synchronized int getClipboard() {
+        return mClipboard;
+    }
+
+    public synchronized void setClipboard(final int clipboard) {
+        mClipboard = clipboard;
+        setInt(KEY_CLIPBOARD, clipboard);
     }
 
     /***************************************************/
