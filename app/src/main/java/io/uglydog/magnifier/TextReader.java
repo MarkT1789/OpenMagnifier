@@ -417,7 +417,7 @@ public class TextReader implements Handler.Callback {
                 }
                 return;
             }
-            Logger.e(TAG, "TextRecognition: failed: " + e);
+            Logger.e(TAG, "TextRecognition: failed: " + e.getMessage());
             if (mBitmap != null && !mBitmap.isRecycled()) {
                 mBitmap.recycle();
             }
@@ -595,7 +595,7 @@ public class TextReader implements Handler.Callback {
             }
 
         } catch (Exception e) {
-            Logger.e(TAG, "getClippedBitmap: failed: " + e);
+            Logger.e(TAG, "getClippedBitmap: failed: " + e.getMessage());
         } catch (OutOfMemoryError oom) {
             Logger.e(TAG, "getClippedBitmap: system ran out of memory decoding region: " + oom);
         } finally {
@@ -607,7 +607,7 @@ public class TextReader implements Handler.Callback {
                     fileInputStream.close();
                 }
             } catch (Exception e) {
-                Logger.e(TAG, "getClippedBitmap: cleanup failed: " + e);
+                Logger.e(TAG, "getClippedBitmap: cleanup failed: " + e.getMessage());
             }
         }
 
@@ -640,7 +640,7 @@ public class TextReader implements Handler.Callback {
                 .addOnFailureListener(new TextRecognitionFailureListener(this, bitmap, token));
 
         } catch (Exception e) {
-            Logger.e(TAG, "TextRecognition: error: " + e);
+            Logger.e(TAG, "TextRecognition: error: " + e.getMessage());
             if (!bitmap.isRecycled()) {
                 bitmap.recycle();
             }

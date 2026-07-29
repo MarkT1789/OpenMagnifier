@@ -207,7 +207,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
                 photoFile.delete();
             }
         } catch (Exception e) {
-            Logger.e(TAG, "Error deleting cached photo: " + e);
+            Logger.e(TAG, "Error deleting cached photo: " + e.getMessage());
         }
 
         super.onDestroy();
@@ -335,21 +335,21 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
             }
             success = true;
         } catch (Exception e) {
-            Logger.e(TAG, "getFileFromContentUri: exception: " +  e);
+            Logger.e(TAG, "getFileFromContentUri: exception: " + e.getMessage());
             success = false;
         } finally {
             if (outputStream != null) {
                 try {
                     outputStream.close();
                 } catch (IOException e) {
-                    Logger.e(TAG, "getFileFromContentUri: error closing output stream: " + e);
+                    Logger.e(TAG, "getFileFromContentUri: error closing output stream: " + e.getMessage());
                 }
             }
             if (inputStream != null) {
                 try {
                     inputStream.close();
                 } catch (IOException e) {
-                    Logger.e(TAG, "getFileFromContentUri: error closing input stream: " + e);
+                    Logger.e(TAG, "getFileFromContentUri: error closing input stream: " + e.getMessage());
                 }
             }
         }

@@ -125,7 +125,7 @@ public class TranslationManager implements ITranslationManager {
             if (manager != null) {
                 synchronized (manager) {
                     if (manager.mActiveSessionId == mSessionId) {
-                        Logger.e(TAG, "prepare: models are not downloaded: " + e);
+                        Logger.e(TAG, "prepare: models are not downloaded: " + e.getMessage());
                         manager.mIsReady = false;
                     }
                 }
@@ -190,7 +190,7 @@ public class TranslationManager implements ITranslationManager {
             final TranslationManager manager = mManagerRef.get();
             final TextToSpeech tts = mTtsRef.get();
             if (manager != null && tts != null) {
-                if (BuildConfig.DEBUG) Logger.d(TAG, "translate: failed: " + e);
+                if (BuildConfig.DEBUG) Logger.d(TAG, "translate: failed: " + e.getMessage());
                 manager.setTtsLanguage(mSourceId, tts);
                 if (!mHashMap.containsKey(mTextId)) {
                     mHashMap.put(mTextId, mOriginalText);
@@ -311,7 +311,7 @@ public class TranslationManager implements ITranslationManager {
                     Logger.i(TAG, "setTtsLanguage: success: " + locale.getDisplayName());
                 }
             } catch (ActivityNotFoundException e) {
-                Logger.e(TAG, "setTtsLanguage: engine installation activity missing: " + e);
+                Logger.e(TAG, "setTtsLanguage: engine installation activity missing: " + e.getMessage());
             }
         }
     }

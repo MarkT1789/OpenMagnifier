@@ -257,7 +257,7 @@ public class SettingsManager {
             if (BuildConfig.DEBUG) Logger.d(TAG, "getFloat: " + key + " = " + value);
             return value;
         } catch (Exception e) {
-            Logger.e(TAG, "getFloat: error: " + key + " : " + e);
+            Logger.e(TAG, "getFloat: error: " + key + " : " + e.getMessage());
             return defaultValue;
         }
     }
@@ -273,7 +273,7 @@ public class SettingsManager {
             if (BuildConfig.DEBUG) Logger.d(TAG, "getInt: " + key + " = " + value);
             return value;
         } catch (Exception e) {
-            Logger.e(TAG, "getInt: error: " + key + " : " + e);
+            Logger.e(TAG, "getInt: error: " + key + " : " + e.getMessage());
             return defaultValue;
         }
     }

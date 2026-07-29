@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
                 photoFile.delete();
             }
         } catch (Exception e) {
-            Logger.e(TAG, "Error deleting cached photo: " + e);
+            Logger.e(TAG, "Error deleting cached photo: " + e.getMessage());
         }
         super.onDestroy();
     }
@@ -748,7 +748,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
             @Override
             public void onError(@NonNull ImageCaptureException e) {
-                Logger.e(TAG, "Photo capture failed: " + e);
+                Logger.e(TAG, "Photo capture failed: " + e.getMessage());
                 mIsProcessing = false;
             }
         });

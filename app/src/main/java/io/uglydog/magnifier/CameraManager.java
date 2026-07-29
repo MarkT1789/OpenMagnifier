@@ -77,7 +77,7 @@ public class CameraManager {
                     bindUseCases(cameraProvider);
                     listener.onCameraReady(mCamera);
                 } catch (ExecutionException | InterruptedException e) {
-                    Logger.e(TAG, "Camera initialization failed: " + e);
+                    Logger.e(TAG, "Camera initialization failed: " + e.getMessage());
                 }
             }
         }, mMainExecutor);
@@ -124,7 +124,7 @@ public class CameraManager {
                     cameraProvider.unbindAll();
                     mCamera = null;
                 } catch (ExecutionException | InterruptedException e) {
-                    Logger.e(TAG, "Error stopping camera: " + e);
+                    Logger.e(TAG, "Error stopping camera: " + e.getMessage());
                 }
             }
         }, mMainExecutor);

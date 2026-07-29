@@ -50,7 +50,7 @@ public class SettingsHelper implements ISettingsHelper {
                 }
             }
         } catch (Exception e) {
-            Logger.e(TAG, "isFlashAdjustable: error: " + e);
+            Logger.e(TAG, "isFlashAdjustable: error: " + e.getMessage());
         }
         return false;
     }
