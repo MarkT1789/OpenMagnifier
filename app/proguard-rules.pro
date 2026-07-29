@@ -14,16 +14,24 @@
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-renamesourcefileattribute SourceFile
 
-# Keep all Google Play Services and GMS tasks intact
--keep class com.google.android.gms.** { *; }
--dontwarn com.google.android.gms.**
-
-# Keep ML Kit text recognition classes from being stripped or renaming
+# Allow ML Kit vision/text models to be instantiated dynamically
 -keep class com.google.mlkit.** { *; }
+
+# Allow Google Play Services internal dynamic loading, but strip everything else
+-keep class com.google.android.gms.common.annotation.KeepName
+-keepclassmembers class * {
+    @com.google.android.gms.common.annotation.KeepName *;
+}
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# Prevent build-time warnings for missing references
+-dontwarn com.google.android.gms.**
 -dontwarn com.google.mlkit.**
