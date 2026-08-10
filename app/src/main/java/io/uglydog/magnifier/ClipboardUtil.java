@@ -66,8 +66,10 @@ public class ClipboardUtil {
     }
 
     public void copy(@Nullable List<String> keys, @Nullable Map<String, String> textMap) {
-        String formattedText = formatText(keys, textMap);
-        copyToClipboard(LABEL, formattedText);
+        final String formattedText = formatText(keys, textMap);
+        if (formattedText.length() > 0) {
+            copyToClipboard(LABEL, formattedText);
+        }
     }
 
     /**
