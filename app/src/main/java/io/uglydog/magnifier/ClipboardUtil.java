@@ -18,9 +18,11 @@
 package io.uglydog.magnifier;
 
 import android.content.ClipData;
+import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Build;
+import android.os.PersistableBundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,9 +48,31 @@ public class ClipboardUtil {
         this(context, toastManager, new ClipboardService() {
             @Override
             public void setPrimaryClip(@NonNull String label, @NonNull String text) {
-                ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                final ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
                 if (clipboard != null) {
-                    ClipData clip = ClipData.newPlainText(label, text);
+                    // check if duplicate
+                    try {
+                        if (clipboard.hasPrimaryClip()) {
+                            final ClipData currentClip = clipboard.getPrimaryClip();
+                            if (currentClip != null && currentClip.getItemCount() > 0) {
+                                final CharSequence currentText = currentClip.getItemAt(0).getText();
+                                if (currentText != null && currentText.toString().equals(text)) {
+                                    return;
+                                }
+                            }
+                        }
+                    } catch (SecurityException e) {
+                    }
+
+                    // save as sensitive data
+                    final ClipData clip = ClipData.newPlainText(label, text);
+                    final PersistableBundle extras = new PersistableBundle();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        extras.putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true);
+                    } else {
+                        extras.putBoolean("android.content.extra.IS_SENSITIVE", true);
+                    }
+                    clip.getDescription().setExtras(extras);
                     clipboard.setPrimaryClip(clip);
                 }
             }
