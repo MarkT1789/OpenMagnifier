@@ -249,21 +249,25 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     @Override
     public void onScale(final float scale, boolean finished) {
         if (BuildConfig.DEBUG) Logger.d(TAG, "onScale " + scale);
-        final Camera camera = mCameraManager.getCamera();
-        final LiveData<ZoomState> zoomStateLiveData = camera.getCameraInfo().getZoomState();
-        if (zoomStateLiveData.getValue() != null) {
-            final ZoomState zoomState = zoomStateLiveData.getValue();
-            final float zoom = zoomState.getZoomRatio();
-            final float maxZoom = zoomState.getMaxZoomRatio();
-            final float minZoom = zoomState.getMinZoomRatio();
-            float next = zoom * scale;
-            if (next > maxZoom) next = maxZoom;
-            if (next < minZoom) next = minZoom;
-            if (zoom != next) {
-                camera.getCameraControl().setZoomRatio(next);
-            }
-            if (finished) {
-                mToastManager.show(this, getString(R.string.toast_view_live_zoom, next));
+        if (mCameraManager != null) {
+            final Camera camera = mCameraManager.getCamera();
+            if (camera != null && camera.getCameraInfo() != null) {
+                final LiveData<ZoomState> zoomStateLiveData = camera.getCameraInfo().getZoomState();
+                if (zoomStateLiveData.getValue() != null) {
+                    final ZoomState zoomState = zoomStateLiveData.getValue();
+                    final float zoom = zoomState.getZoomRatio();
+                    final float maxZoom = zoomState.getMaxZoomRatio();
+                    final float minZoom = zoomState.getMinZoomRatio();
+                    float next = zoom * scale;
+                    if (next > maxZoom) next = maxZoom;
+                    if (next < minZoom) next = minZoom;
+                    if (zoom != next) {
+                        camera.getCameraControl().setZoomRatio(next);
+                    }
+                    if (finished) {
+                        mToastManager.show(this, getString(R.string.toast_view_live_zoom, next));
+                    }
+                }
             }
         }
     }
