@@ -1,14 +1,6 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="@string/settings_title">
-
-        <ListPreference
-            app:defaultValue="0"
-            app:entries="@array/rotation_entries"
-            app:entryValues="@array/rotation_values"
-            app:key="rotation_setting"
-            app:title="@string/settings_rotation"
-            app:useSimpleSummaryProvider="true" />
+    <PreferenceCategory app:title="@string/settings_camera_category">
 
         <ListPreference
             app:defaultValue="1.0"
@@ -19,20 +11,23 @@
             app:useSimpleSummaryProvider="true" />
 
         <ListPreference
-            app:defaultValue="0.25"
-            app:entries="@array/pan_entries"
-            app:entryValues="@array/pan_values"
-            app:key="dx_setting"
-            app:title="@string/settings_dx"
+            app:defaultValue="0"
+            app:entries="@array/rotation_entries"
+            app:entryValues="@array/rotation_values"
+            app:key="rotation_setting"
+            app:title="@string/settings_rotation"
             app:useSimpleSummaryProvider="true" />
 
         <ListPreference
-            app:defaultValue="0.25"
-            app:entries="@array/pan_entries"
-            app:entryValues="@array/pan_values"
-            app:key="dy_setting"
-            app:title="@string/settings_dy"
+            app:defaultValue="0.0"
+            app:entries="@array/flashlight_entries"
+            app:entryValues="@array/flashlight_values"
+            app:key="flashlight_setting"
+            app:title="@string/settings_flashlight"
             app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/settings_image_category">
 
         <ListPreference
             app:defaultValue="0"
@@ -58,13 +53,8 @@
             app:title="@string/settings_contrast"
             app:useSimpleSummaryProvider="true" />
 
-        <ListPreference
-            app:defaultValue="0.0"
-            app:entries="@array/flashlight_entries"
-            app:entryValues="@array/flashlight_values"
-            app:key="flashlight_setting"
-            app:title="@string/settings_flashlight"
-            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/settings_ocr_category">
 
         <ListPreference
             app:defaultValue="0"
@@ -73,6 +63,17 @@
             app:key="speak_setting"
             app:title="@string/settings_speak"
             app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/volume_entries"
+            app:entryValues="@array/volume_values"
+            app:key="volume_setting"
+            app:title="@string/settings_volume"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/settings_translate_category">
 
         <ListPreference
             app:defaultValue="0"
@@ -89,6 +90,9 @@
             app:key="dest_setting"
             app:title="@string/settings_dest"
             app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/settings_banner_category">
 
         <ListPreference
             app:defaultValue="0"
@@ -130,13 +134,8 @@
             app:title="@string/settings_banner_highlight"
             app:useSimpleSummaryProvider="true" />
 
-        <ListPreference
-            app:defaultValue="0"
-            app:entries="@array/volume_entries"
-            app:entryValues="@array/volume_values"
-            app:key="volume_setting"
-            app:title="@string/settings_volume"
-            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/settings_other_category">
 
         <ListPreference
             app:defaultValue="0"
@@ -147,5 +146,23 @@
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
+    <PreferenceCategory app:title="@string/settings_keyboard_category">
 
+        <ListPreference
+            app:defaultValue="0.25"
+            app:entries="@array/pan_entries"
+            app:entryValues="@array/pan_values"
+            app:key="dx_setting"
+            app:title="@string/settings_dx"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0.25"
+            app:entries="@array/pan_entries"
+            app:entryValues="@array/pan_values"
+            app:key="dy_setting"
+            app:title="@string/settings_dy"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
 </PreferenceScreen>

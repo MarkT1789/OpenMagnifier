@@ -43,7 +43,7 @@
     </string-array>
 
     <string-array name="color_entries">
-        <item>@string/entries_full</item>
+        <item>@string/entries_none</item>
         <item>@string/entries_grayscale</item>
         <item>@string/entries_inverse</item>
         <item>@string/entries_inverse_grayscale</item>
