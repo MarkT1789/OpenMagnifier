@@ -267,7 +267,9 @@ public class TextReader implements Handler.Callback {
                 return;
             }
             try {
-                reader.mTts.stop();
+                if (reader.mTts != null) {
+                    reader.mTts.stop();
+                }
 
                 final float scaleX = (float) mViewWidth / mBitmap.getWidth();
                 final float scaleY = (float) mViewHeight / mBitmap.getHeight();
