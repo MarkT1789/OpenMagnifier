@@ -300,4 +300,15 @@
         <item>0</item>
         <item>1</item>
     </string-array>
+
+    <string-array name="help_entries">
+        <item>@string/entries_disabled</item>
+        <item>@string/entries_tmp_enabled</item>
+        <item>@string/entries_enabled</item>
+    </string-array>
+    <string-array name="help_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
 </resources>

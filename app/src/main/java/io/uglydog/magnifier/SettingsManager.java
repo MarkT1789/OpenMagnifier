@@ -45,10 +45,12 @@ public class SettingsManager {
     private static final String KEY_BANNER_FONT = "banner_font_setting";
     private static final String KEY_BANNER_HIGHLIGHT = "banner_highlight_setting";
     private static final String KEY_CLIPBOARD = "clipboard_setting";
+    private static final String KEY_HELP = "help_setting";
+    private static final String KEY_ACTIVITY = "activity_setting";
 
     private final SharedPreferences mPrefs;
     private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight, mBannerSize;
-    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont, mBannerHighlight, mClipboard;
+    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont, mBannerHighlight, mClipboard, mHelp, mActivity;
     private String mSplashVersion;
 
     public SettingsManager(@NonNull final SharedPreferences sharedPreferences) {
@@ -76,6 +78,8 @@ public class SettingsManager {
         mBannerFont = getInt(KEY_BANNER_FONT, 0);
         mBannerHighlight = getInt(KEY_BANNER_HIGHLIGHT, 0);
         mClipboard = getInt(KEY_CLIPBOARD, 0);
+        mHelp = getInt(KEY_HELP, 1);
+        mActivity = getInt(KEY_ACTIVITY, 0);
     }
 
     public synchronized float getBrightness() {
@@ -249,6 +253,23 @@ public class SettingsManager {
         setInt(KEY_CLIPBOARD, clipboard);
     }
 
+    public synchronized int getHelp() {
+        return mHelp;
+    }
+
+    public synchronized void setHelp(final int help) {
+        mHelp = help;
+        setInt(KEY_HELP, help);
+    }
+
+    public synchronized int getActivity() {
+        return mActivity;
+    }
+
+    public synchronized void setActivity(final int activity) {
+        mActivity = activity;
+        setInt(KEY_ACTIVITY, activity);
+    }
     /***************************************************/
 
     private String getString(@NonNull final String key, @NonNull final String defaultValue) {

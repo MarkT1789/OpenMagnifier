@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     private TextReaderOverlay mTextReaderOverlay;
     private ToastManager mToastManager;
     private ClipboardUtil mClipboardUtil;
+    private HelpOverlay mHelpOverlay;
 
     private static final int MSG_FLASHLIGHT_OFF = 1;
     private static final int MSG_IMAGE_OFF = 2;
@@ -139,6 +140,10 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
         mTextReaderOverlay.setSettingsManager(mSettingsManager);
+        mHelpOverlay = findViewById(R.id.helpOverlayView);
+        if (mSettingsManager.getHelp() != 0) {
+            mHelpOverlay.setText(HelpOverlay.MODE_LIVE);
+        }
 
         // DI Fallback: Initialize default dependency if not injected by a test
         if (mTranslationManager == null) {
@@ -194,8 +199,10 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
         if (mImageView.getVisibility() == View.VISIBLE) {
             mImageView.setOrientation(mSettingsManager.getRotation());
+            mHelpOverlay.setMode(mSettingsManager.getHelp() != 0 ? HelpOverlay.MODE_FROZEN : HelpOverlay.MODE_NONE);
         } else {
             toggleFlashlight(true);
+            mHelpOverlay.setMode(mSettingsManager.getHelp() != 0 ? HelpOverlay.MODE_LIVE : HelpOverlay.MODE_NONE);
         }
 
         final Camera camera = mCameraManager.getCamera();
@@ -562,6 +569,17 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
 
     @Override
     public boolean onToggleMode() {
+        if (mSettingsManager.getHelp() == 1) {
+            final int count = mSettingsManager.getActivity();
+            if (count == 20) { /* disable after 20 switches */
+                mSettingsManager.setHelp(0);
+                mSettingsManager.setActivity(0);
+                mHelpOverlay.setMode(HelpOverlay.MODE_NONE);
+            } else {
+                mSettingsManager.setActivity(count + 1);
+            }
+        }
+
         if (mImageView.getVisibility() == View.VISIBLE) {
             mHandler.removeMessages(MSG_IMAGE_OFF);
             final boolean immediate = mHandler.hasMessages(MSG_FLASHLIGHT_OFF) || (mSettingsManager.getFlashlight() == 0.0f);
@@ -578,11 +596,17 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
             mTextReader.stop();
             mTextReaderOverlay.showCopyright(false);
             mTextReaderOverlay.clearOverlay();
+            if (mSettingsManager.getHelp() != 0) {
+                mHelpOverlay.setMode(HelpOverlay.MODE_LIVE);
+            }
             return true;
         }
 
         if (!mIsProcessing) {
             mToastManager.show(this, getString(R.string.toast_view_freeze_frame));
+            if (mSettingsManager.getHelp() != 0) {
+                mHelpOverlay.setMode(HelpOverlay.MODE_FROZEN);
+            }
             captureToView();
             return true;
         }
