@@ -90,7 +90,8 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
         mCopyrightPaint = new Paint();
         mCopyrightPaint.setColor(Color.WHITE);
         mCopyrightPaint.setAntiAlias(true);
-        mCopyrightPaint.setTextSize(64f);
+        mCopyrightPaint.setTextSize(48f);
+        mCopyrightPaint.setTextAlign(Paint.Align.RIGHT);
 
         mBackgroundPaint = new Paint();
         mBackgroundPaint.setColor(Color.BLACK);
@@ -233,7 +234,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
 
     private void drawCopyright(final Canvas canvas) {
         if (mShowCopyright) {
-            canvas.drawText(mText, OFFSET * 2, canvas.getHeight() - OFFSET, mCopyrightPaint);
+            canvas.drawText(mText, canvas.getWidth() - (OFFSET * 2), canvas.getHeight() - OFFSET, mCopyrightPaint);
         }
     }
 
