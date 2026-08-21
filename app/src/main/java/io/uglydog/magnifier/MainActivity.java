@@ -141,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
         mTextReaderOverlay = findViewById(R.id.textOverlayView);
         mTextReaderOverlay.setSettingsManager(mSettingsManager);
         mHelpOverlay = findViewById(R.id.helpOverlayView);
+        mHelpOverlay.setSettingsManager(mSettingsManager);
         if (mSettingsManager.getHelp() != 0) {
             mHelpOverlay.setText(HelpOverlay.MODE_LIVE);
         }

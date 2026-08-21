@@ -47,10 +47,14 @@ public class SettingsManager {
     private static final String KEY_CLIPBOARD = "clipboard_setting";
     private static final String KEY_HELP = "help_setting";
     private static final String KEY_ACTIVITY = "activity_setting";
+    private static final String KEY_HELP_SIZE = "help_size_setting";
+    private static final String KEY_HELP_COLOR = "help_color_setting";
+    private static final String KEY_HELP_FONT = "help_font_setting";
+    private static final String KEY_HELP_TIMER = "help_timer_setting";
 
     private final SharedPreferences mPrefs;
-    private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight, mBannerSize;
-    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont, mBannerHighlight, mClipboard, mHelp, mActivity;
+    private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight, mBannerSize, mHelpSize;
+    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont, mBannerHighlight, mClipboard, mHelp, mActivity, mHelpColor, mHelpFont, mHelpTimer;
     private String mSplashVersion;
 
     public SettingsManager(@NonNull final SharedPreferences sharedPreferences) {
@@ -80,6 +84,10 @@ public class SettingsManager {
         mClipboard = getInt(KEY_CLIPBOARD, 0);
         mHelp = getInt(KEY_HELP, 1);
         mActivity = getInt(KEY_ACTIVITY, 0);
+        mHelpSize = getFloat(KEY_HELP_SIZE, 1.0f);
+        mHelpColor = getInt(KEY_HELP_COLOR, 0);
+        mHelpFont = getInt(KEY_HELP_FONT, 0);
+        mHelpTimer = getInt(KEY_HELP_TIMER, 15);
     }
 
     public synchronized float getBrightness() {
@@ -270,6 +278,43 @@ public class SettingsManager {
         mActivity = activity;
         setInt(KEY_ACTIVITY, activity);
     }
+
+    public synchronized float getHelpSize() {
+        return mHelpSize;
+    }
+
+    public synchronized void setHelpSize(final float helpSize) {
+        mHelpSize = helpSize;
+        setFloat(KEY_HELP_SIZE, helpSize);
+    }
+
+    public synchronized int getHelpColor() {
+        return mHelpColor;
+    }
+
+    public synchronized void setHelpColor(final int helpColor) {
+        mHelpColor = helpColor;
+        setInt(KEY_HELP_COLOR, helpColor);
+    }
+
+    public synchronized int getHelpFont() {
+        return mHelpFont;
+    }
+
+    public synchronized void setHelpFont(final int helpFont) {
+        mHelpFont = helpFont;
+        setInt(KEY_HELP_FONT, helpFont);
+    }
+
+    public synchronized int getHelpTimer() {
+        return mHelpTimer;
+    }
+
+    public synchronized void setHelpTimer(final int helpTimer) {
+        mHelpTimer = helpTimer;
+        setInt(KEY_HELP_TIMER, helpTimer);
+    }
+
     /***************************************************/
 
     private String getString(@NonNull final String key, @NonNull final String defaultValue) {

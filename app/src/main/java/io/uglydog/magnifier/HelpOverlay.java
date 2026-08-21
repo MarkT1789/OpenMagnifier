@@ -19,6 +19,7 @@ package io.uglydog.magnifier;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -30,6 +31,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.res.ResourcesCompat;
 
 public class HelpOverlay extends View implements Handler.Callback {
 
@@ -41,6 +43,7 @@ public class HelpOverlay extends View implements Handler.Callback {
     private String mText;
     private StaticLayout mStaticLayout;
     private int mWidth;
+    private SettingsManager mSettingsManager;
 
     public final static int MODE_NONE = 0;
     public final static int MODE_LIVE = 1;
@@ -62,6 +65,11 @@ public class HelpOverlay extends View implements Handler.Callback {
 
         mHandler = new Handler(Looper.getMainLooper(), this);
         setText(MODE_NONE);
+        setSettingsManager(null);
+    }
+
+    public void setSettingsManager(final SettingsManager settingsManager) {
+        mSettingsManager = settingsManager;
     }
 
     public void setText(final int mode) {
@@ -84,7 +92,11 @@ public class HelpOverlay extends View implements Handler.Callback {
         }
         if (mode != MODE_NONE) {
             mHandler.removeMessages(MSG_CLEAR_BACKGROUND);
-            mHandler.sendEmptyMessageDelayed(MSG_CLEAR_BACKGROUND, CLEAR_BACKGROUND_TIMER);
+            if (mSettingsManager != null) {
+                mHandler.sendEmptyMessageDelayed(MSG_CLEAR_BACKGROUND, mSettingsManager.getHelpTimer() * 1000);
+            } else {
+                mHandler.sendEmptyMessageDelayed(MSG_CLEAR_BACKGROUND, CLEAR_BACKGROUND_TIMER);
+            }
         }
         setText(mode);
         setLayout();
@@ -102,6 +114,34 @@ public class HelpOverlay extends View implements Handler.Callback {
         final int availableWidth = mWidth - getPaddingLeft() - getPaddingRight();
         if (availableWidth <= 0) {
             return;
+        }
+
+        if (mSettingsManager != null) {
+            mTextPaint.setTextSize(48f * mSettingsManager.getHelpSize());
+            switch(mSettingsManager.getHelpColor()) {
+                case 0:
+                    mTextPaint.setColor(Color.WHITE);
+                break;
+                case 1:
+                    mTextPaint.setColor(Color.BLACK);
+                break;
+                case 2:
+                    mTextPaint.setColor(Color.YELLOW);
+                break;
+                case 3:
+                    mTextPaint.setColor(Color.GREEN);
+                break;
+            }
+
+            final int helpFont = mSettingsManager.getHelpFont();
+            if (helpFont == 0) {
+                mTextPaint.setTypeface(Typeface.SANS_SERIF);
+            } else {
+                int font = getFontId(helpFont);
+                if (font != -1) {
+                    setFont(font);
+                }
+            }
         }
 
         final boolean isRtl = getLayoutDirection() == LAYOUT_DIRECTION_RTL;
@@ -135,5 +175,43 @@ public class HelpOverlay extends View implements Handler.Callback {
     public boolean handleMessage(@NonNull final Message msg) {
         setMode(MODE_NONE);
         return false;
+    }
+
+    private void setFont(int id) {
+        final Typeface font = ResourcesCompat.getFont(getContext(), id);
+        if (font != null) {
+            mTextPaint.setTypeface(font);
+        }
+    }
+
+    public int getFontId(final int index) {
+        switch(index) {
+            case 1:
+                return R.font.atkinson_hyperlegible_next_medium;
+            case 2:
+                return R.font.atkinson_hyperlegible_next_bold;
+            case 3:
+                return R.font.open_dyslexic_regular;
+            case 4:
+                return R.font.open_dyslexic_bold;
+            case 5:
+                return R.font.lexend_deca_medium;
+            case 6:
+                return R.font.lexend_deca_bold;
+            case 7:
+                return R.font.lexend_giga_medium;
+            case 8:
+                return R.font.lexend_giga_bold;
+            case 9:
+                return R.font.lexend_peta_medium;
+            case 10:
+                return R.font.lexend_peta_bold;
+            case 11:
+                return R.font.lexend_zetta_medium;
+            case 12:
+                return R.font.lexend_zetta_bold;
+            default:
+                return -1;
+        }
     }
 }

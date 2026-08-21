@@ -311,4 +311,39 @@
         <item>1</item>
         <item>2</item>
     </string-array>
+
+    <string-array name="help_size_entries">
+        <item>0.75x</item>
+        <item>1.0x</item>
+        <item>1.25x</item>
+        <item>1.5x</item>
+    </string-array>
+    <string-array name="help_size_values">
+        <item>0.75</item>
+        <item>1.0</item>
+        <item>1.25</item>
+        <item>1.5</item>
+    </string-array>
+    <string-array name="help_color_entries">
+        <item>@string/entries_white</item>
+        <item>@string/entries_black</item>
+        <item>@string/entries_yellow</item>
+        <item>@string/entries_green</item>
+    </string-array>
+    <string-array name="help_color_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+    <string-array name="help_timer_entries">
+        <item>5 seconds</item>
+        <item>15 seconds</item>
+        <item>30 seconds</item>
+    </string-array>
+    <string-array name="help_timer_values">
+        <item>5</item>
+        <item>15</item>
+        <item>30</item>
+    </string-array>
 </resources>

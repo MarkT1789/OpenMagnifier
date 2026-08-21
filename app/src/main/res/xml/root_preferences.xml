@@ -145,12 +145,47 @@
             app:title="@string/settings_clipboard"
             app:useSimpleSummaryProvider="true" />
 
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/settings_help_category">
+
         <ListPreference
             app:defaultValue="1"
             app:entries="@array/help_entries"
             app:entryValues="@array/help_values"
             app:key="help_setting"
             app:title="@string/settings_help"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="1.0"
+            app:entries="@array/help_size_entries"
+            app:entryValues="@array/help_size_values"
+            app:key="help_size_setting"
+            app:title="@string/settings_help_size"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/help_color_entries"
+            app:entryValues="@array/help_color_values"
+            app:key="help_color_setting"
+            app:title="@string/settings_help_color"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/banner_font_entries"
+            app:entryValues="@array/banner_font_values"
+            app:key="help_font_setting"
+            app:title="@string/settings_help_font"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="15"
+            app:entries="@array/help_timer_entries"
+            app:entryValues="@array/help_timer_values"
+            app:key="help_timer_setting"
+            app:title="@string/settings_help_timer"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
