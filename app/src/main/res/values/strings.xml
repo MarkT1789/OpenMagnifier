@@ -57,7 +57,7 @@
     <string name="entries_banner_font_lexend_zetta_medium">Lexend Zetta Medium</string>
     <string name="entries_banner_font_lexend_zetta_bold">Lexend Zetta Bold</string>
     <string name="entries_highlight_underline">Underlined</string>
-    <string name="entries_highlight_green">Soft green highligght</string>
+    <string name="entries_highlight_green">Soft green highlight</string>
     <string name="entries_highlight_blue">Deep blue highlight</string>
     <string name="entries_highlight_green_underline">Soft green highlight, underlined</string>
     <string name="entries_highlight_blue_underline">Deep blue highlight, underlined</string>
