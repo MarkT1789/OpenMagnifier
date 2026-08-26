@@ -528,6 +528,12 @@ public class MainActivity extends AppCompatActivity implements GestureListener.G
     }
 
     @Override
+    public void onShowPreferences() {
+        final Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
+    }
+
+    @Override
     public void onShowVersion() {
         mToastManager.show(this, getString(R.string.version_known, getVersion()));
     }

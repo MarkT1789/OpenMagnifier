@@ -405,5 +405,7 @@ public class ShareActivity extends AppCompatActivity implements InputHandler.Inp
     @Override
     public void onShowHelp() {}
     @Override
+    public void onShowPreferences() {}
+    @Override
     public void onShowVersion() {}
 }

@@ -37,6 +37,7 @@ public class InputHandler {
         void onScrollViewport(KeyEvent event);
         boolean onVolumeChanged(KeyEvent event);
         void onShowHelp();
+        void onShowPreferences();
         void onShowVersion();
     }
 
@@ -85,6 +86,10 @@ public class InputHandler {
             case KeyEvent.KEYCODE_L:
                 if (isFirstKeyDown)
                     actions.onChangeFlashlightSetting(event);
+                return true;
+            case KeyEvent.KEYCODE_P:
+                if (isFirstKeyDown)
+                    actions.onShowPreferences();
                 return true;
             case KeyEvent.KEYCODE_R:
                 if (isFirstKeyDown)
