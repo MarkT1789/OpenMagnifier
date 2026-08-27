@@ -115,6 +115,10 @@ public class TextReader implements Handler.Callback {
                 } else {
                     Logger.i(TAG, "TextToSpeech: ready locale=" + mLocale);
                     reader.mTtsReady = true;
+                    final float rate = reader.mSettingsManager.getSpeechRate();
+                    if (rate > 0.0f) {
+                        reader.mTts.setSpeechRate(rate);
+                    }
                 }
             } else {
                 Logger.e(TAG, "TextToSpeech: initialization failed status=" + status);
@@ -542,6 +546,10 @@ public class TextReader implements Handler.Callback {
     public void start() {
         if (BuildConfig.DEBUG) Logger.d(TAG, "start");
         setupTextRecognizer();
+        final float rate = mSettingsManager.getSpeechRate();
+        if (rate > 0.0f && mTtsReady) {
+            mTts.setSpeechRate(rate);
+        }
         mMainHandler.removeMessages(MSG_SPEAK);
         if (mSettingsManager.getSpeak() != 0 && !mIsDestroyed) {
             mMainHandler.sendEmptyMessageDelayed(MSG_SPEAK, 2000);

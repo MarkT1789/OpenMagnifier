@@ -71,6 +71,7 @@
     <string name="entries_black">Black</string>
     <string name="entries_yellow">Yellow</string>
     <string name="entries_green">Green</string>
+    <string name="entries_default">Default</string>
 
     <string name="settings_camera_category">Camera Settings</string>
     <string name="settings_keyboard_category">Keyboard Command Settings</string>
@@ -104,6 +105,7 @@
     <string name="settings_help_color">Help Text Color</string>
     <string name="settings_help_font">Help Text Font</string>
     <string name="settings_help_timer">Help Clear Timer</string>
+    <string name="settings_speech_rate">Speech Rate</string>
 
     <string name="toast_brightness">Brightness %1$s</string>
     <string name="toast_brightness_disabled">Can\'t change brightness in live view</string>

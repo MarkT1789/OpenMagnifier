@@ -51,9 +51,10 @@ public class SettingsManager {
     private static final String KEY_HELP_COLOR = "help_color_setting";
     private static final String KEY_HELP_FONT = "help_font_setting";
     private static final String KEY_HELP_TIMER = "help_timer_setting";
+    private static final String KEY_SPEECH_RATE = "speech_rate_setting";
 
     private final SharedPreferences mPrefs;
-    private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight, mBannerSize, mHelpSize;
+    private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight, mBannerSize, mHelpSize, mSpeechRate;
     private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont, mBannerHighlight, mClipboard, mHelp, mActivity, mHelpColor, mHelpFont, mHelpTimer;
     private String mSplashVersion;
 
@@ -88,6 +89,7 @@ public class SettingsManager {
         mHelpColor = getInt(KEY_HELP_COLOR, 0);
         mHelpFont = getInt(KEY_HELP_FONT, 0);
         mHelpTimer = getInt(KEY_HELP_TIMER, 15);
+        mSpeechRate = getFloat(KEY_SPEECH_RATE, 0.0f);
     }
 
     public synchronized float getBrightness() {
@@ -313,6 +315,15 @@ public class SettingsManager {
     public synchronized void setHelpTimer(final int helpTimer) {
         mHelpTimer = helpTimer;
         setInt(KEY_HELP_TIMER, helpTimer);
+    }
+
+    public synchronized float getSpeechRate() {
+        return mSpeechRate;
+    }
+
+    public synchronized void setSpeechRate(final float speechRate) {
+        mSpeechRate = speechRate;
+        setFloat(KEY_SPEECH_RATE, speechRate);
     }
 
     /***************************************************/
