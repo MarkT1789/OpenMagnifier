@@ -145,12 +145,23 @@
             app:title="@string/settings_clipboard"
             app:useSimpleSummaryProvider="true" />
 
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/settings_tts_category">
+
         <ListPreference
             app:defaultValue="0.0"
             app:entries="@array/speech_rate_entries"
             app:entryValues="@array/speech_rate_values"
             app:key="speech_rate_setting"
             app:title="@string/settings_speech_rate"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="0.0"
+            app:entries="@array/pitch_rate_entries"
+            app:entryValues="@array/pitch_rate_values"
+            app:key="pitch_rate_setting"
+            app:title="@string/settings_pitch_rate"
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>

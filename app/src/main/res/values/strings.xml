@@ -81,6 +81,7 @@
     <string name="settings_banner_category">Text Banner Settings</string>
     <string name="settings_other_category">General Settings</string>
     <string name="settings_help_category">Help Overlay Settings</string>
+    <string name="settings_tts_category">Text to Speech Settings</string>
 
     <string name="settings_rotation">Screen Rotation (freeze frame)</string>
     <string name="settings_zoom">Camera Zoom Level (live view)</string>
@@ -106,6 +107,7 @@
     <string name="settings_help_font">Help Text Font</string>
     <string name="settings_help_timer">Help Clear Timer</string>
     <string name="settings_speech_rate">Speech Rate</string>
+    <string name="settings_pitch_rate">Pitch</string>
 
     <string name="toast_brightness">Brightness %1$s</string>
     <string name="toast_brightness_disabled">Can\'t change brightness in live view</string>

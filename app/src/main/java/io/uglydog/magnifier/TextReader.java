@@ -119,6 +119,10 @@ public class TextReader implements Handler.Callback {
                     if (rate > 0.0f) {
                         reader.mTts.setSpeechRate(rate);
                     }
+                    final float pitch = reader.mSettingsManager.getPitchRate();
+                    if (pitch > 0.0f) {
+                        reader.mTts.setPitch(pitch);
+                    }
                 }
             } else {
                 Logger.e(TAG, "TextToSpeech: initialization failed status=" + status);
@@ -549,6 +553,10 @@ public class TextReader implements Handler.Callback {
         final float rate = mSettingsManager.getSpeechRate();
         if (rate > 0.0f && mTtsReady) {
             mTts.setSpeechRate(rate);
+        }
+        final float pitch = mSettingsManager.getPitchRate();
+        if (pitch > 0.0f && mTtsReady) {
+            mTts.setPitch(pitch);
         }
         mMainHandler.removeMessages(MSG_SPEAK);
         if (mSettingsManager.getSpeak() != 0 && !mIsDestroyed) {

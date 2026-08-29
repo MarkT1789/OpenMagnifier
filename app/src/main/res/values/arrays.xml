@@ -367,4 +367,21 @@
         <item>1.75</item>
         <item>2.0</item>
     </string-array>
+
+    <string-array name="pitch_rate_entries">
+        <item>@string/entries_default</item>
+        <item>0.5</item>
+        <item>0.75</item>
+        <item>1.0</item>
+        <item>1.25</item>
+        <item>1.5</item>
+    </string-array>
+    <string-array name="pitch_rate_values">
+        <item>0</item>
+        <item>0.5</item>
+        <item>0.75</item>
+        <item>1.0</item>
+        <item>1.25</item>
+        <item>1.5</item>
+    </string-array>
 </resources>
