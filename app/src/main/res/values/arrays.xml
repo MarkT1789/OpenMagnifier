@@ -358,7 +358,7 @@
         <item>2.0x</item>
     </string-array>
     <string-array name="speech_rate_values">
-        <item>0</item>
+        <item>0.0</item>
         <item>0.5</item>
         <item>0.8</item>
         <item>1.0</item>
@@ -377,7 +377,7 @@
         <item>1.5</item>
     </string-array>
     <string-array name="pitch_rate_values">
-        <item>0</item>
+        <item>0.0</item>
         <item>0.5</item>
         <item>0.75</item>
         <item>1.0</item>
