@@ -35,8 +35,8 @@ android {
         applicationId = "io.uglydog.magnifier"
         minSdk = 24
         targetSdk = 36
-        versionCode = 117000
-        versionName = "1.17.0"
+        versionCode = 117010
+        versionName = "1.17.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
