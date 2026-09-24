@@ -70,6 +70,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     private int mBannerFont;
     private int mWordStart;
     private int mWordEnd;
+    private int mSpeakHighlight;
 
     private boolean mShowCopyright;
     private boolean mShowBackground;
@@ -78,7 +79,6 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
         super(context, attrs);
 
         mBorderPaint = new Paint();
-        mBorderPaint.setColor(Color.GREEN);
         mBorderPaint.setStyle(Paint.Style.STROKE);
         mBorderPaint.setStrokeWidth(STROKE_WIDTH);
         mBorderPaint.setAntiAlias(true);
@@ -106,6 +106,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
         mShowBackground = false;
         mBannerColor = -1;
         mBannerFont = -1;
+        mSpeakHighlight = -1;
 
         updateTextSize();
     }
@@ -214,7 +215,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     protected void onDraw(@NonNull final Canvas canvas) {
         super.onDraw(canvas);
 
-        if (!mRect.isEmpty()) {
+        if (!mRect.isEmpty() && mSpeakHighlight != 0) {
             canvas.drawRect(mRect, mBorderPaint);
         }
         drawCopyright(canvas);
@@ -452,6 +453,24 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
                 break;
             }
             mBannerColor = bannerColor;
+        }
+        final int speakHighlight = mSettingsManager.getSpeakHighlight();
+        if (mSpeakHighlight != speakHighlight) {
+            switch(speakHighlight) {
+                case 1:
+                    mBorderPaint.setColor(Color.WHITE);
+                break;
+                case 2:
+                    mBorderPaint.setColor(Color.BLACK);
+                break;
+                case 3:
+                    mBorderPaint.setColor(Color.YELLOW);
+                break;
+                case 4:
+                    mBorderPaint.setColor(Color.GREEN);
+                break;
+            }
+            mSpeakHighlight = speakHighlight;
         }
     }
 

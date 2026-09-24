@@ -72,6 +72,14 @@
             app:title="@string/settings_volume"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            app:defaultValue="4"
+            app:entries="@array/speak_highlight_entries"
+            app:entryValues="@array/speak_highlight_values"
+            app:key="speak_highlight_setting"
+            app:title="@string/settings_speak_highlight"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
     <PreferenceCategory app:title="@string/settings_translate_category">
 

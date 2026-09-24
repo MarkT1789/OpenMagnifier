@@ -108,6 +108,21 @@
         <item>4</item>
     </string-array>
 
+    <string-array name="speak_highlight_entries">
+        <item>@string/entries_disabled</item>
+        <item>@string/entries_white</item>
+        <item>@string/entries_black</item>
+        <item>@string/entries_yellow</item>
+        <item>@string/entries_green</item>
+    </string-array>
+    <string-array name="speak_highlight_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+
     <string-array name="source_entries">
         <item>@string/entries_disabled</item>
         <item>@string/entries_bengali</item>
