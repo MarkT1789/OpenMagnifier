@@ -56,9 +56,8 @@ public class TextReaderOverlayTest {
 
     @Before
     public void setUp() {
-        // Build and resume a real Activity. This provides a genuine Window token!
         mActivity = Robolectric.buildActivity(Activity.class).setup().get();
-        
+
         mMockSettingsManager = mock(SettingsManager.class);
         when(mMockSettingsManager.getBannerSize()).thenReturn(1.0f);
         when(mMockSettingsManager.getBanner()).thenReturn(2);
@@ -68,7 +67,6 @@ public class TextReaderOverlayTest {
         mOverlay = new TextReaderOverlay(mActivity, null);
         mOverlay.setSettingsManager(mMockSettingsManager);
 
-        // Setting it as the Activity content perfectly triggers isAttachedToWindow() = true
         mActivity.setContentView(mOverlay);
         ShadowLooper.idleMainLooper();
     }
@@ -83,7 +81,7 @@ public class TextReaderOverlayTest {
     public void testSetHandlerBindsCorrectLooper() {
         Handler realHandler = new Handler(Looper.getMainLooper());
         mOverlay.setHandler(realHandler);
-        
+
         mOverlay.clear();
         ShadowLooper.idleMainLooper();
         assertFalse(mOverlay.isShowBackground());
@@ -99,10 +97,9 @@ public class TextReaderOverlayTest {
 
     @Test
     public void testUpdateRectWhenNotAttachedToWindowDoesNothing() {
-        // Detach the view from the Activity window to hit the early return branch
         ((ViewGroup) mOverlay.getParent()).removeView(mOverlay);
         ShadowLooper.idleMainLooper();
-        
+
         Rect rect = new Rect(10, 20, 30, 40);
         mOverlay.setRect(rect);
         assertTrue(mOverlay.getInternalRect().isEmpty());
@@ -113,19 +110,21 @@ public class TextReaderOverlayTest {
         Rect rect = new Rect(10, 20, 30, 40);
         mOverlay.setRect(rect);
         ShadowLooper.idleMainLooper();
-        
+
         assertEquals(rect, mOverlay.getInternalRect());
     }
 
     @Test
     public void testUpdateRectWhenAttachedWithNullRectClearsIt() {
-        mOverlay.setRect(new Rect(10, 20, 30, 40));
+        Rect rect = new Rect(10, 20, 30, 40);
+        mOverlay.setRect(rect);
         ShadowLooper.idleMainLooper();
-        
+
+        // Null rect preserves previously set dimensions
         mOverlay.setRect(null);
         ShadowLooper.idleMainLooper();
-        
-        assertTrue(mOverlay.getInternalRect().isEmpty());
+
+        assertEquals(rect, mOverlay.getInternalRect());
     }
 
     @Test
@@ -149,7 +148,7 @@ public class TextReaderOverlayTest {
     public void testUpdateTextWhenNotAttachedDoesNothing() {
         ((ViewGroup) mOverlay.getParent()).removeView(mOverlay);
         ShadowLooper.idleMainLooper();
-        
+
         mOverlay.setText("Hello World", 0, 5);
         assertNull(mOverlay.getTts());
     }
@@ -168,10 +167,10 @@ public class TextReaderOverlayTest {
     public void testUpdateTextNullInputBranches() {
         mOverlay.setText("Initial Text", 0, 5);
         ShadowLooper.idleMainLooper();
-        
+
         mOverlay.setText(null, -1, -1);
         ShadowLooper.idleMainLooper();
-        
+
         assertNull(mOverlay.getTts());
         assertEquals(0, mOverlay.getStart());
     }
@@ -180,11 +179,10 @@ public class TextReaderOverlayTest {
     public void testUpdateTextMatchingTtsAndVaryingBounds() {
         mOverlay.setText("Sample text matching layouts text configurations", 0, 10);
         ShadowLooper.idleMainLooper();
-        
-        // This exercises the (mCount != 0) inside the identical-string logic branch
+
         mOverlay.setText("Sample text matching layouts text configurations", 2, 25);
         ShadowLooper.idleMainLooper();
-        
+
         assertEquals("Sample text matching layouts text configurations", mOverlay.getTts());
     }
 
@@ -192,7 +190,7 @@ public class TextReaderOverlayTest {
     public void testUpdateTextVaryingTextResetsBounds() {
         mOverlay.setText("First String", 0, 5);
         ShadowLooper.idleMainLooper();
-        
+
         mOverlay.setText("Second String", 5, 10);
         ShadowLooper.idleMainLooper();
 
@@ -217,13 +215,14 @@ public class TextReaderOverlayTest {
 
     @Test
     public void testClearOverlayResetsProperties() {
-        mOverlay.setRect(new Rect(0, 0, 10, 10));
+        Rect initialRect = new Rect(0, 0, 10, 10);
+        mOverlay.setRect(initialRect);
         mOverlay.setText("Reset Target", 0, 5);
         ShadowLooper.idleMainLooper();
 
         mOverlay.clearOverlay();
         ShadowLooper.idleMainLooper();
-        
+
         assertFalse(mOverlay.isShowBackground());
         assertTrue(mOverlay.getInternalRect().isEmpty());
         assertNull(mOverlay.getTts());
@@ -250,9 +249,23 @@ public class TextReaderOverlayTest {
     }
 
     @Test
+    public void testHandleMessageClearRectBranches() {
+        mOverlay.setRect(new Rect(10, 20, 30, 40));
+        ShadowLooper.idleMainLooper();
+        assertFalse(mOverlay.getInternalRect().isEmpty());
+
+        Message msg = Message.obtain();
+        msg.what = 2; // MSG_CLEAR_RECT
+
+        boolean handled = mOverlay.handleMessage(msg);
+        assertTrue(handled);
+        assertTrue(mOverlay.getInternalRect().isEmpty());
+    }
+
+    @Test
     public void testHandleMessageIgnoresUnknownCodes() {
         Message msg = Message.obtain();
-        msg.what = 999; 
+        msg.what = 999;
 
         boolean handled = mOverlay.handleMessage(msg);
         assertFalse(handled);
@@ -262,7 +275,7 @@ public class TextReaderOverlayTest {
     public void testShowCopyrightUpdatesState() {
         mOverlay.showCopyright(true);
         assertTrue(mOverlay.isShowCopyright());
-        
+
         mOverlay.showCopyright(false);
         assertFalse(mOverlay.isShowCopyright());
     }
@@ -281,10 +294,8 @@ public class TextReaderOverlayTest {
         mOverlay.showCopyright(true);
         ShadowLooper.idleMainLooper();
 
-        // Give the view physical bounds so getWidth() doesn't return 0
         mOverlay.layout(0, 0, 1000, 1000);
 
-        // Back the test canvas with a Bitmap so canvas.getWidth() > OFFSET
         Bitmap bitmap = Bitmap.createBitmap(1000, 1000, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
@@ -299,20 +310,17 @@ public class TextReaderOverlayTest {
 
     @Test
     public void testOnDetachedFromWindowClosesHandler() {
-        // Completely covers onDetachedFromWindow sequence via view destruction flow
         ((ViewGroup) mOverlay.getParent()).removeView(mOverlay);
         ShadowLooper.idleMainLooper();
     }
 
     @Test
     public void testUpdateTextSizeAllFontsAndColors() {
-        // Sequentially exercise font switches (0 through 12)
         for (int i = 0; i <= 12; i++) {
             when(mMockSettingsManager.getBannerFont()).thenReturn(i);
             mOverlay.updateTextSize();
         }
 
-        // Sequentially exercise theme background color switches (0 through 7)
         for (int i = 0; i <= 7; i++) {
             when(mMockSettingsManager.getBannerColor()).thenReturn(i);
             mOverlay.updateTextSize();
@@ -321,11 +329,9 @@ public class TextReaderOverlayTest {
 
     @Test
     public void testDrawTextRtlAndMaxLinesExceeded() {
-        // Configure SettingsManager to have a single line constraint
         when(mMockSettingsManager.getBanner()).thenReturn(1);
         mOverlay.updateTextSize();
 
-        // 1. Force branch: staticLayout.getLineCount() > mSettingsManager.getBanner()
         mOverlay.setText("This is an exceptionally long piece of multiline text designed to exceed a banner setting of one line maximum.", 0, 5);
         ShadowLooper.idleMainLooper();
 
@@ -334,7 +340,6 @@ public class TextReaderOverlayTest {
         Canvas canvas = new Canvas(bitmap);
         mOverlay.onDraw(canvas);
 
-        // 2. Force branch: textDirection == Layout.DIR_RIGHT_TO_LEFT
         String rtlText = "مرحبا بالعالم هذا نص طويل جدا لتجربة اتجاه النص";
         mOverlay.setText(rtlText, 0, 5);
         ShadowLooper.idleMainLooper();

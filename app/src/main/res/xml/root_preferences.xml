@@ -80,6 +80,14 @@
             app:title="@string/settings_speak_highlight"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/stripe_entries"
+            app:entryValues="@array/stripe_values"
+            app:key="stripe_setting"
+            app:title="@string/settings_stripe"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
     <PreferenceCategory app:title="@string/settings_translate_category">
 

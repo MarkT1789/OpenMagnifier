@@ -54,10 +54,11 @@ public class SettingsManager {
     private static final String KEY_SPEECH_RATE = "speech_rate_setting";
     private static final String KEY_PITCH_RATE = "pitch_rate_setting";
     private static final String KEY_SPEAK_HIGHLIGHT = "speak_highlight_setting";
+    private static final String KEY_STRIPE = "stripe_setting";
 
     private final SharedPreferences mPrefs;
     private float mBrightness, mContrast, mDx, mDy, mZoom, mFlashlight, mBannerSize, mHelpSize, mSpeechRate, mPitchRate;
-    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont, mBannerHighlight, mClipboard, mHelp, mActivity, mHelpColor, mHelpFont, mHelpTimer, mSpeakHighlight;
+    private int mRotation, mColor, mSpeak, mSource, mDest, mBanner, mVolume, mBannerColor, mBannerFont, mBannerHighlight, mClipboard, mHelp, mActivity, mHelpColor, mHelpFont, mHelpTimer, mSpeakHighlight, mStripe;
     private String mSplashVersion;
 
     public SettingsManager(@NonNull final SharedPreferences sharedPreferences) {
@@ -94,6 +95,7 @@ public class SettingsManager {
         mSpeechRate = getFloat(KEY_SPEECH_RATE, 0.0f);
         mPitchRate = getFloat(KEY_PITCH_RATE, 0.0f);
         mSpeakHighlight = getInt(KEY_SPEAK_HIGHLIGHT, 4);
+        mStripe = getInt(KEY_STRIPE, 0);
     }
 
     public synchronized float getBrightness() {
@@ -346,6 +348,15 @@ public class SettingsManager {
     public synchronized void setSpeakHighlight(final int speakHighlight) {
         mSpeakHighlight = speakHighlight;
         setInt(KEY_SPEAK_HIGHLIGHT, speakHighlight);
+    }
+
+    public synchronized int getStripe() {
+        return mStripe;
+    }
+
+    public synchronized void setStripe(final int stripe) {
+        mStripe = stripe;
+        setInt(KEY_STRIPE, stripe);
     }
 
     /***************************************************/

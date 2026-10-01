@@ -49,6 +49,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     private static final float TEXT_SIZE = 23.0f;
     private static final int OFFSET = 40;
     private static final int MSG_CLEAR_BACKGROUND = 1;
+    private static final int MSG_CLEAR_RECT = 2;
     private static final int CLEAR_BACKGROUND_TIMER = 2000;
 
     private final Rect mRect;
@@ -56,6 +57,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     private final Paint mTextPaint;
     private final Paint mCopyrightPaint;
     private final Paint mBackgroundPaint;
+    private final Paint mStripePaint;
     private final String mText;
 
     private Handler mMainHandler;
@@ -71,6 +73,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     private int mWordStart;
     private int mWordEnd;
     private int mSpeakHighlight;
+    private int mStripe;
 
     private boolean mShowCopyright;
     private boolean mShowBackground;
@@ -96,6 +99,10 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
         mBackgroundPaint = new Paint();
         mBackgroundPaint.setColor(Color.BLACK);
         mBackgroundPaint.setStyle(Paint.Style.FILL);
+
+        mStripePaint = new Paint();
+        mStripePaint.setColor(Color.BLACK);
+        mStripePaint.setStyle(Paint.Style.FILL);
 
         mText = context.getString(R.string.translate_attribution);
 
@@ -134,10 +141,16 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
         if (!mMainHandler.hasMessages(MSG_CLEAR_BACKGROUND)) {
             mMainHandler.sendEmptyMessageDelayed(MSG_CLEAR_BACKGROUND, CLEAR_BACKGROUND_TIMER);
         }
+        if (!mMainHandler.hasMessages(MSG_CLEAR_RECT)) {
+            mMainHandler.sendEmptyMessageDelayed(MSG_CLEAR_RECT, CLEAR_BACKGROUND_TIMER);
+        }
     }
 
     @Override
     public void setRect(@Nullable final Rect rect) {
+        if (rect != null) {
+            mMainHandler.removeMessages(MSG_CLEAR_RECT);
+        }
         if (Looper.myLooper() == Looper.getMainLooper()) {
             updateRect(rect);
         } else {
@@ -170,9 +183,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
             return;
         }
 
-        if (rect == null) {
-            mRect.setEmpty();
-        } else {
+        if (rect != null) {
             mRect.set(rect);
         }
         invalidate();
@@ -215,8 +226,25 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     protected void onDraw(@NonNull final Canvas canvas) {
         super.onDraw(canvas);
 
-        if (!mRect.isEmpty() && mSpeakHighlight != 0) {
-            canvas.drawRect(mRect, mBorderPaint);
+        if (!mRect.isEmpty()) {
+            if (mStripe != 0) {
+                Rect rect = new Rect();
+                // Top strip
+                canvas.drawRect(0, 0, getWidth(), mRect.top, mStripePaint);
+
+                // Bottom strip
+                canvas.drawRect(0, mRect.bottom, getWidth(), getHeight(), mStripePaint);
+
+                // Left strip
+                canvas.drawRect(0, mRect.top, mRect.left, mRect.bottom, mStripePaint);
+
+                // Right strip
+                canvas.drawRect(mRect.right, mRect.top, getWidth(), mRect.bottom, mStripePaint);
+            }
+
+            if (mSpeakHighlight != 0) {
+                canvas.drawRect(mRect, mBorderPaint);
+            }
         }
         drawCopyright(canvas);
         drawText(canvas);
@@ -332,6 +360,10 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
                     invalidate();
                 }
                 return true;
+            case MSG_CLEAR_RECT:
+                mRect.setEmpty();
+                invalidate();
+                return true;
         }
         return false;
     }
@@ -344,7 +376,7 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
     @Override
     public void clearOverlay() {
         mShowBackground = false;
-        setRect(null);
+        mRect.setEmpty();
         setText(null, -1, -1);
         invalidate();
     }
@@ -471,6 +503,25 @@ public class TextReaderOverlay extends View implements Handler.Callback, ITextRe
                 break;
             }
             mSpeakHighlight = speakHighlight;
+        }
+
+        final int stripe = mSettingsManager.getStripe();
+        if (mStripe != stripe) {
+            switch(stripe) {
+                case 1:
+                    mStripePaint.setAlpha((int)(0.30f * 255));
+                break;
+                case 2:
+                    mStripePaint.setAlpha((int)(0.55f * 255));
+                break;
+                case 3:
+                    mStripePaint.setAlpha((int)(0.75f * 255));
+                break;
+                case 4:
+                    mStripePaint.setAlpha((int)(0.90f * 255));
+                break;
+            }
+            mStripe = stripe;
         }
     }
 

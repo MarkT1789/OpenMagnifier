@@ -399,4 +399,19 @@
         <item>1.25</item>
         <item>1.5</item>
     </string-array>
+
+    <string-array name="stripe_entries">
+        <item>@string/entries_disabled</item>
+        <item>30% Minimal</item>
+        <item>55% Balanced</item>
+        <item>75% High Focus</item>
+        <item>90% Maximum</item>
+    </string-array>
+    <string-array name="stripe_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
 </resources>

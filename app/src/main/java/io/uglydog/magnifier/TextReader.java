@@ -226,6 +226,7 @@ public class TextReader implements Handler.Callback {
             if (reader == null || reader.mIsDestroyed) return;
             if (reader.mTextReaderOverlay != null) {
                 reader.mTextReaderOverlay.clear();
+                reader.mTextReaderOverlay.clearOverlay();
             }
             if (reader.mTts != null) {
                 reader.mTts.stop();
