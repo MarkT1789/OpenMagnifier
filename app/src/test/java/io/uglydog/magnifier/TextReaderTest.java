@@ -148,6 +148,12 @@ public class TextReaderTest {
         recField.set(reader, recognizer);
     }
 
+    private void setRunning(TextReader reader, boolean running) throws Exception {
+        Field runningField = TextReader.class.getDeclaredField("mIsRunning");
+        runningField.setAccessible(true);
+        runningField.set(reader, running);
+    }
+
     // ==========================================
     // 1. SETUP TEXT RECOGNIZER BRANCHES
     // ==========================================
@@ -268,6 +274,9 @@ public class TextReaderTest {
         injectMockTts(mTextReader, mockTts);
         when(mockSettings.getSpeak()).thenReturn(0);
 
+        // Reader must be marked as running to process scale and center updates
+        setRunning(mTextReader, true);
+
         listener.onScaleChanged(2.0f, 1);
         verify(mockOverlay).clear();
         verify(mockTts).stop();
@@ -327,12 +336,11 @@ public class TextReaderTest {
 
         Field mapField = TextReader.class.getDeclaredField("mHashMap");
         mapField.setAccessible(true);
+        @SuppressWarnings("unchecked")
         HashMap<String, String> map = (HashMap<String, String>) mapField.get(mTextReader);
 
         // Set mIsRunning to true so onRangeStart condition passes
-        Field runningField = TextReader.class.getDeclaredField("mIsRunning");
-        runningField.setAccessible(true);
-        runningField.set(mTextReader, true);
+        setRunning(mTextReader, true);
 
         // Standard test
         map.put("10:10:20:20", "Test Banner Text");
@@ -377,6 +385,7 @@ public class TextReaderTest {
 
         Bitmap dummyBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
         injectMockTts(mTextReader, mockTts);
+        setRunning(mTextReader, true);
         when(mockImageView.isReady()).thenReturn(true);
 
         OnSuccessListener<Text> listener = (OnSuccessListener<Text>) constructor.newInstance(mTextReader, mockTranslationManager, dummyBitmap, 1080, 1920, 0);
@@ -416,6 +425,7 @@ public class TextReaderTest {
         constructor.setAccessible(true);
 
         Bitmap dummyBitmap = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
+        setRunning(mTextReader, true);
 
         // Token mismatch (listener token = 999, currentTaskToken = 0)
         OnSuccessListener<Text> listener = (OnSuccessListener<Text>) constructor.newInstance(mTextReader, mockTranslationManager, dummyBitmap, 1080, 1920, 999);
@@ -450,6 +460,7 @@ public class TextReaderTest {
     @Test
     public void testProcessFile_SuccessAndLegacySdk() throws Exception {
         injectMockRecognizer(mTextReader, mockTextRecognizer);
+        setRunning(mTextReader, true);
         when(mockTextRecognizer.process(any(InputImage.class))).thenReturn(mockTask);
 
         try (MockedStatic<InputImage> mockedStaticInput = mockStatic(InputImage.class);
@@ -476,6 +487,7 @@ public class TextReaderTest {
     @Test
     public void testProcessFile_ExceptionsAndNullBitmap() throws Exception {
         injectMockRecognizer(mTextReader, mockTextRecognizer);
+        setRunning(mTextReader, true);
 
         // Sub-case 1: Missing file
         mFakeCacheFile.delete();
@@ -502,10 +514,12 @@ public class TextReaderTest {
 
         Field mapField = TextReader.class.getDeclaredField("mHashMap");
         mapField.setAccessible(true);
+        @SuppressWarnings("unchecked")
         HashMap<String, String> map = (HashMap<String, String>) mapField.get(mTextReader);
 
         Field listField = TextReader.class.getDeclaredField("mArrayList");
         listField.setAccessible(true);
+        @SuppressWarnings("unchecked")
         ArrayList<String> list = (ArrayList<String>) listField.get(mTextReader);
 
         Field lastVolField = TextReader.class.getDeclaredField("mLastVolumeUp");

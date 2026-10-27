@@ -159,7 +159,7 @@ public class TextReader implements Handler.Callback {
         @Override
         public void onStart(final String utteranceId) {
             final TextReader reader = mReaderRef.get();
-            if (reader == null || reader.mIsDestroyed) return;
+            if (reader == null || reader.mIsDestroyed || !reader.mIsRunning) return;
 
             reader.mMainHandler.post(new Runnable() {
                 @Override
@@ -223,7 +223,7 @@ public class TextReader implements Handler.Callback {
         @Override
         public void onScaleChanged(float newScale, final int origin) {
             final TextReader reader = mReaderRef.get();
-            if (reader == null || reader.mIsDestroyed) return;
+            if (reader == null || reader.mIsDestroyed || !reader.mIsRunning) return;
             if (reader.mTextReaderOverlay != null) {
                 reader.mTextReaderOverlay.clear();
                 reader.mTextReaderOverlay.clearOverlay();
@@ -237,7 +237,7 @@ public class TextReader implements Handler.Callback {
         @Override
         public void onCenterChanged(final PointF newCenter, final int origin) {
             final TextReader reader = mReaderRef.get();
-            if (reader == null || reader.mIsDestroyed) return;
+            if (reader == null || reader.mIsDestroyed || !reader.mIsRunning) return;
             if (reader.mTextReaderOverlay != null) {
                 reader.mTextReaderOverlay.clear();
                 reader.mTextReaderOverlay.clearOverlay();
@@ -270,7 +270,7 @@ public class TextReader implements Handler.Callback {
         public void onSuccess(final Text visionText) {
             final TextReader reader = mReaderRef.get();
             final ITranslationManager translationManager = mTranslationManagerRef.get();
-            if (reader == null || translationManager == null || reader.mIsDestroyed || mToken != reader.mCurrentTaskToken || reader.mImageView == null || !reader.mImageView.isReady()) {
+            if (reader == null || translationManager == null || reader.mIsDestroyed || !reader.mIsRunning || mToken != reader.mCurrentTaskToken || reader.mImageView == null || !reader.mImageView.isReady()) {
                 if (mBitmap != null && !mBitmap.isRecycled()) {
                     mBitmap.recycle();
                 }
@@ -528,8 +528,18 @@ public class TextReader implements Handler.Callback {
     public void stop() {
         if (BuildConfig.DEBUG) Logger.d(TAG, "stop");
         mIsRunning = false;
+
+        synchronized (this) {
+            mCurrentTaskToken++;
+        }
+
         mMainHandler.removeMessages(MSG_SPEAK);
         mBackgroundHandler.removeCallbacksAndMessages(null);
+
+        if (mActiveRecognitionTask != null && !mActiveRecognitionTask.isComplete()) {
+            mActiveRecognitionTask = null;
+        }
+
         if (mTextRecognizer != null) {
             mTextRecognizer.close();
             mTextRecognizer = null;
@@ -642,11 +652,15 @@ public class TextReader implements Handler.Callback {
     public void processFile(@NonNull final Rect visibleRect, final int viewWidth, final int viewHeight, final int token) {
         if (BuildConfig.DEBUG) Logger.d(TAG, "processFile");
 
-        if (mIsDestroyed || token != mCurrentTaskToken || mTextRecognizer == null) {
-            return;
+        final TextRecognizer recognizer;
+        synchronized (this) {
+            if (mIsDestroyed || !mIsRunning || token != mCurrentTaskToken) {
+                return;
+            }
+            recognizer = mTextRecognizer;
         }
 
-        if (!mFile.exists()) {
+        if (recognizer == null || !mFile.exists()) {
             Logger.e(TAG, "processFile: file does not exist");
             return;
         }
@@ -657,10 +671,17 @@ public class TextReader implements Handler.Callback {
             return;
         }
 
+        synchronized (this) {
+            if (mIsDestroyed || !mIsRunning || token != mCurrentTaskToken) {
+                bitmap.recycle();
+                return;
+            }
+        }
+
         try {
             final InputImage image = InputImage.fromBitmap(bitmap, 0);
 
-            mActiveRecognitionTask = mTextRecognizer.process(image);
+            mActiveRecognitionTask = recognizer.process(image);
             mActiveRecognitionTask.addOnSuccessListener(new TextRecognitionSuccessListener(this, mTranslationManager, bitmap, viewWidth, viewHeight, token))
                 .addOnFailureListener(new TextRecognitionFailureListener(this, bitmap, token));
 
